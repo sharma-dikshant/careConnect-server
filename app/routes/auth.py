@@ -1,5 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 import controllers.auth as controller
+from deps import get_db
+from schemas.schemas import PatientCreate, DoctorCreate
 
 router = APIRouter(prefix='/api/auth')
 
@@ -9,8 +12,8 @@ async def signin():
 
 
 @router.post('/signup')
-async def signup():
-    return controller.signup()
+async def signup(body: DoctorCreate, db: Session = Depends(get_db)):
+    return controller.signup(body, db)
 
 
 @router.post('/logout')

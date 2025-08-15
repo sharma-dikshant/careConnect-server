@@ -1,6 +1,23 @@
 from pydantic import BaseModel
-
-class User(BaseModel):
+from typing import Optional
+    
+    
+class PatientCreate(BaseModel):
     name: str
     email: str
-    phone: str | None = None
+    password: str
+    
+class DoctorCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+    phone: str
+    address: str
+    designation: str
+    license: str
+    specialization: str
+    experience: Optional[int] = 0
+    bio: str
+    hospital: str
+
+    
