@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header, Cookie
 from pydantic import BaseModel
-import controllers.users as controller
+from ..controllers import users as controller
 
 router = APIRouter(prefix='/api/users')
 

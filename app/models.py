@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
+from sqlalchemy import TIMESTAMP, Column, Integer, String, Boolean, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from db_config import Base
+from sqlalchemy.sql.expression import text
+from .db_config import Base
 
 
 class Doctor(Base):
@@ -18,6 +19,7 @@ class Doctor(Base):
     bio = Column(Text)
     hospital = Column(String(255))
     active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     
     #relationship
     appointments = relationship("Appointment", back_populates="doctor")
@@ -31,6 +33,8 @@ class Patient(Base):
     email = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)  # hashed
     active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
     
     #relationship
     appointments = relationship("Appointment", back_populates="patient")
@@ -42,6 +46,8 @@ class Appointment(Base):
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
     doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
     active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
     
     #relationship
     patient = relationship("Patient", back_populates="appointments")
@@ -55,6 +61,8 @@ class GlobalContext(Base):
     doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
     file = Column(String(255))
     active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
     
     #relationship
     doctor = relationship("Doctor", back_populates="global_contexts")
@@ -66,6 +74,8 @@ class LocalContext(Base):
     appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=False)
     file = Column(String(255))
     active = Column(Boolean, default=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
     
     #relationship
     appointment = relationship("Appointment", back_populates="local_contexts")  # fixed name
