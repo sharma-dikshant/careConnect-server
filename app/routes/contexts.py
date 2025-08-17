@@ -2,7 +2,7 @@ from fastapi import APIRouter, Header, Cookie
 from pydantic import BaseModel
 from ..controllers import contexts as controller
 
-router = APIRouter(prefix='/api/contexts')
+router = APIRouter(prefix='/api/contexts', tags=['Contexts'])
 
 
 @router.post("")

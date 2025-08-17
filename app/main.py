@@ -16,6 +16,6 @@ app.include_router(user_router)
 app.include_router(patient_router)
 app.include_router(context_router)
 
-@app.get("/")
+@app.get("/", tags=['root'])
 def root():
     return {"message": "welcome to care Connect"}

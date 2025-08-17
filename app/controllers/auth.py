@@ -2,14 +2,9 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..models import Doctor, Patient
 from ..schemas import DoctorCreate, LoginCreate
-from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from .. import oauth2
 
-
-SECRET_KEY = "my_secret_key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
 
@@ -18,20 +13,8 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 
-def verify_password(plain_password: str, hash_password: str):
-    return pwd_context.verify(plain_password, hash_password)
-
-
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()   # clone the payload (e.g., {"sub": "user_id"})
-    # set token expiry (default: ACCESS_TOKEN_EXPIRE_MINUTES)
-    expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    # add "exp" claim required by JWT for expiration
-    to_encode.update({"exp": expire})
-    # encode JWT with secret key + algorithm
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+def verify_password(plain_password: str, hashed_password: str):
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def login(data: LoginCreate, db: Session):
@@ -49,7 +32,7 @@ def login_doctor(email: str, password: str, db: Session):
     if verify_password(password, existing.password) == False:
         raise HTTPException(400, detail="incorrect password")
 
-    token = create_access_token(
+    token = oauth2.create_access_token(
         {"id": existing.id, "role": "doctor", "name": existing.name, "email": existing.email})
     return {"message": "success", "data": {"token": token}}
 
@@ -62,7 +45,7 @@ def login_patient(email: str, password: str, db: Session):
     if verify_password(password, existing.password) == False:
         raise HTTPException(400, detail="incorrect password")
 
-    token = create_access_token(
+    token = oauth2.create_access_token(
         {"id": existing.id, "role": "patient", "name": existing.name, "email": existing.email})
     return {"message": "success", "data": {"token": token}}
 
@@ -76,11 +59,11 @@ def signup(doctor: DoctorCreate, db: Session):
 
     doctor.password = hash_password(doctor.password)
     new_doctor = Doctor(**doctor.model_dump())
-    token = create_access_token(
-        {"id": new_doctor.id, "role": "doctor", "name": new_doctor.name, "email": new_doctor.email})
     db.add(new_doctor)
     db.commit()
     db.refresh(new_doctor)
+    token = oauth2.create_access_token(
+        {"id": new_doctor.id, "role": "doctor", "name": new_doctor.name, "email": new_doctor.email})
     return {"message": "Signup successful", "data": {"token": token}}
 
 

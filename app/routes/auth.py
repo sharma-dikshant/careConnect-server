@@ -4,7 +4,7 @@ from ..controllers import auth as controller
 from ..deps import get_db
 from ..schemas import PatientCreate, DoctorCreate, LoginCreate
 
-router = APIRouter(prefix='/api/auth')
+router = APIRouter(prefix='/api/auth', tags=['Auth'])
 
 
 @router.post('/login')
