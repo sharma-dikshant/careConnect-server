@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..models import Doctor, Patient
-from ..schemas import DoctorCreate, LoginCreate
+from ..schemas import DoctorCreate, LoginCreate, ApiResponse
 from passlib.context import CryptContext
 from .. import oauth2
 
@@ -34,7 +34,7 @@ def login_doctor(email: str, password: str, db: Session):
 
     token = oauth2.create_access_token(
         {"id": existing.id, "role": "doctor", "name": existing.name, "email": existing.email})
-    return {"message": "success", "data": {"token": token}}
+    return ApiResponse(message="logged in", data={"token": token, "type": "Bearer"})
 
 
 def login_patient(email: str, password: str, db: Session):
@@ -47,7 +47,7 @@ def login_patient(email: str, password: str, db: Session):
 
     token = oauth2.create_access_token(
         {"id": existing.id, "role": "patient", "name": existing.name, "email": existing.email})
-    return {"message": "success", "data": {"token": token}}
+    return ApiResponse(message="logged in", data={"token": token, "type": "Bearer"})
 
 
 def signup(doctor: DoctorCreate, db: Session):
@@ -64,8 +64,8 @@ def signup(doctor: DoctorCreate, db: Session):
     db.refresh(new_doctor)
     token = oauth2.create_access_token(
         {"id": new_doctor.id, "role": "doctor", "name": new_doctor.name, "email": new_doctor.email})
-    return {"message": "Signup successful", "data": {"token": token}}
+    return ApiResponse(message="signed up", data={"token": token, "type": "Bearer"})
 
 
 def logout():
-    return {"message": "success", "data": {"token": "invalid"}}
+    return ApiResponse(message="logged out", data={"token": "invalid", "type": "Bearer"})

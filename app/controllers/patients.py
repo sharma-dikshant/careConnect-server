@@ -1,17 +1,42 @@
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from ..schemas import PatientCreate
-from ..models import Patient
+from ..schemas import PatientCreate, AccessTokenPayload, ApiResponse, PatientBase
+from ..models import Patient, Appointment
 from ..utils import hash_password
 
 
-def add_patient(body: PatientCreate, db: Session):
+def add_patient(body: PatientCreate, login_user: AccessTokenPayload, db: Session):
     new_patient = Patient(**body.model_dump())
     new_patient.password = hash_password(body.password)
-    db.add(new_patient)
+
+    try:
+        db.add(new_patient)
+        db.flush()
+
+        new_appointment = Appointment(
+            patient_id=new_patient.id, doctor_id=login_user.id)
+        db.add(new_appointment)
+
+        db.commit()
+        db.refresh(new_patient)
+        db.refresh(new_appointment)
+        return ApiResponse(message="success", data=PatientBase.model_validate(new_patient))
+    except Exception as e:
+        db.rollback()
+
+
+def inactive_patient(patient_id: int, login_user: AccessTokenPayload, db: Session):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+
+    if not patient:
+        raise HTTPException(status.HTTP_404_NOT_FOUND,
+                            detail=f"patient with id {patient_id} does not exist!")
+
+    appointment = db.query(Appointment).filter(
+        Appointment.patient_id == patient_id, Appointment.doctor_id == login_user.id).first()
+
+    appointment.active = False
     db.commit()
-    db.refresh(new_patient)
-    return {"message": "success", "data": new_patient}
+    db.refresh(appointment)
 
-
-def inactive_patient():
-    return {"message": "success", "data": "inactive patient"}
+    return {"message": "success", "data": f"inactive patient {patient_id}'s appointment"}

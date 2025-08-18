@@ -1,11 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Optional, Literal, Any
 
 
-class PatientCreate(BaseModel):
+class PatientBase(BaseModel):
     name: str
     email: str
+    
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+class PatientCreate(PatientBase):
     password: str
+    
 
 
 class DoctorCreate(BaseModel):
@@ -36,3 +43,8 @@ class AccessTokenPayload(BaseModel):
     role: Literal['patient', 'doctor']
     name: str
     email: str
+
+
+class ApiResponse(BaseModel):
+    message: str
+    data: Optional[Any] = None
