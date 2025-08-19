@@ -6,6 +6,12 @@ from ..utils import hash_password
 
 
 def add_patient(body: PatientCreate, login_user: AccessTokenPayload, db: Session):
+    existing = db.query(Patient).filter(Patient.email == body.email).first()
+
+    if existing:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST,
+                            detail=f"user with email {body.email} already exists")
+
     new_patient = Patient(**body.model_dump())
     new_patient.password = hash_password(body.password)
 

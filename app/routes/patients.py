@@ -19,4 +19,7 @@ async def add_patient(body: PatientCreate, db: Session = Depends(get_db), login_
 
 @router.post('/inactive/{patient_id}')
 async def inactive(patient_id: int, db: Session = Depends(get_db), login_user: AccessTokenPayload = Depends(get_current_user)):
+    if login_user.role is not "doctor":
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                            detail="you're not allowed to perform this action")
     return controller.inactive_patient(patient_id, login_user, db)

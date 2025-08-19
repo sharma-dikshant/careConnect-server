@@ -8,9 +8,9 @@ class Doctor(Base):
     __tablename__ = "doctors"
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)  # hashed
-    phone = Column(String(10), nullable=False)
+    phone = Column(String(10), nullable=False, unique=True)
     address = Column(Text)
     designation = Column(String(255))
     license = Column(String(255))
@@ -19,9 +19,10 @@ class Doctor(Base):
     bio = Column(Text)
     hospital = Column(String(255))
     active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    
-    #relationship
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, default=text('now()'))
+
+    # relationship
     appointments = relationship("Appointment", back_populates="doctor")
     global_contexts = relationship("GlobalContext", back_populates="doctor")
 
@@ -30,13 +31,13 @@ class Patient(Base):
     __tablename__ = "patients"
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)  # hashed
     active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    
-    
-    #relationship
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, default=text('now()'))
+
+    # relationship
     appointments = relationship("Appointment", back_populates="patient")
 
 
@@ -46,13 +47,14 @@ class Appointment(Base):
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
     doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
     active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    
-    
-    #relationship
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, default=text('now()'))
+
+    # relationship
     patient = relationship("Patient", back_populates="appointments")
     doctor = relationship("Doctor", back_populates="appointments")
-    local_contexts = relationship("LocalContext", back_populates="appointment")  # fixed name
+    local_contexts = relationship(
+        "LocalContext", back_populates="appointment")  # fixed name
 
 
 class GlobalContext(Base):
@@ -61,21 +63,23 @@ class GlobalContext(Base):
     doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
     file = Column(String(255))
     active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    
-    
-    #relationship
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, default=text('now()'))
+
+    # relationship
     doctor = relationship("Doctor", back_populates="global_contexts")
 
 
 class LocalContext(Base):
     __tablename__ = "local_contexts"
     id = Column(Integer, primary_key=True)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=False)
+    appointment_id = Column(Integer, ForeignKey(
+        "appointments.id"), nullable=False)
     file = Column(String(255))
     active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    
-    
-    #relationship
-    appointment = relationship("Appointment", back_populates="local_contexts")  # fixed name
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, default=text('now()'))
+
+    # relationship
+    appointment = relationship(
+        "Appointment", back_populates="local_contexts")  # fixed name
