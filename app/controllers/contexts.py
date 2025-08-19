@@ -1,3 +1,4 @@
+from email import message
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from ..schemas import CreateContext, AccessTokenPayload, ApiResponse
@@ -12,6 +13,7 @@ def add_global_context(context: CreateContext, login_user: AccessTokenPayload, d
         db.commit()
         db.refresh(new_g_context)
     except:
+        db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             f"failed to add global contxt {new_g_context}")
 
@@ -34,14 +36,11 @@ def add_patient_context(context: CreateContext, appointment_id: int, login_user:
         db.commit()
         db.refresh(new_l_context)
     except:
+        db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             f"failed to add global contxt {new_l_context}")
 
     return ApiResponse(message="success", data=CreateContext.model_validate(new_l_context))
-
-
-def remove_global_context():
-    return ApiResponse(message="success", data="removed context")
 
 
 def add_global_context(context: CreateContext, login_user: AccessTokenPayload, db: Session):
@@ -52,6 +51,7 @@ def add_global_context(context: CreateContext, login_user: AccessTokenPayload, d
         db.commit()
         db.refresh(new_g_context)
     except:
+        db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             f"failed to add global contxt {new_g_context}")
 
@@ -74,6 +74,7 @@ def add_patient_context(context: CreateContext, appointment_id: int, login_user:
         db.commit()
         db.refresh(new_l_context)
     except:
+        db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
                             f"failed to add global contxt {new_l_context}")
 
@@ -90,10 +91,14 @@ def remove_global_context(context_id: int, login_user: AccessTokenPayload, db: S
     if context.doctor_id != login_user.id:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                             detail=f"global context {context_id} doesn't belongs to you")
-
-    context.active = False
-    db.commit()
-    db.refresh(context)
+    try:
+        context.active = False
+        db.commit()
+        db.refresh(context)
+    except:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            f"failed to remove global context {context_id}")
     return ApiResponse(message="success", data="inactive global context")
 
 
@@ -113,7 +118,12 @@ def remove_local_context(context_id: int, login_user: AccessTokenPayload, db: Se
         raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                             detail=f"local context {context_id} doesn't belongs to you")
 
-    valid_context.active = False
-    db.commit()
-    db.refresh(valid_context)
+    try:
+        valid_context.active = False
+        db.commit()
+        db.refresh(valid_context)
+    except:
+        db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            f"failed to remove local context {context_id}")
     return ApiResponse(message="success", data="inactive global context")

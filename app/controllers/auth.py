@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from ..models import Doctor, Patient
 from ..schemas import DoctorCreate, LoginCreate, ApiResponse
@@ -57,11 +57,16 @@ def signup(doctor: DoctorCreate, db: Session):
         raise HTTPException(
             status_code=400, detail="user with this email already exists")
 
-    doctor.password = hash_password(doctor.password)
-    new_doctor = Doctor(**doctor.model_dump())
-    db.add(new_doctor)
-    db.commit()
-    db.refresh(new_doctor)
+    try:
+        doctor.password = hash_password(doctor.password)
+        new_doctor = Doctor(**doctor.model_dump())
+        db.add(new_doctor)
+        db.commit()
+        db.refresh(new_doctor)
+    except:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, f"failed to create account")
     token = oauth2.create_access_token(
         {"id": new_doctor.id, "role": "doctor", "name": new_doctor.name, "email": new_doctor.email})
     return ApiResponse(message="signed up", data={"token": token, "type": "Bearer"})
