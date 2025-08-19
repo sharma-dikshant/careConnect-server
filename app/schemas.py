@@ -29,6 +29,12 @@ class DoctorCreate(BaseModel):
     hospital: str
 
 
+class CreateContext(BaseModel):
+    file: str
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
 class LoginCreate(BaseModel):
     type: Literal["doctor", "patient"]
     email: str
