@@ -5,14 +5,14 @@ from typing import Optional, Literal, Any
 class PatientBase(BaseModel):
     name: str
     email: str
-    
+
     class Config:
         orm_mode = True
         from_attributes = True
 
+
 class PatientCreate(PatientBase):
     password: str
-    
 
 
 class DoctorCreate(BaseModel):
@@ -31,9 +31,11 @@ class DoctorCreate(BaseModel):
 
 class CreateContext(BaseModel):
     file: str
+
     class Config:
         orm_mode = True
         from_attributes = True
+
 
 class LoginCreate(BaseModel):
     type: Literal["doctor", "patient"]
@@ -42,6 +44,11 @@ class LoginCreate(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class MessageCreate(BaseModel):
+    sender: Literal["patient", "bot"]
+    message: str
 
 
 class AccessTokenPayload(BaseModel):

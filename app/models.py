@@ -1,7 +1,8 @@
-from sqlalchemy import TIMESTAMP, Column, Integer, String, Boolean, ForeignKey, Text
+from sqlalchemy import TIMESTAMP, Column, Integer, String, Boolean, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import text
 from .db_config import Base
+import enum
 
 
 class Doctor(Base):
@@ -55,6 +56,7 @@ class Appointment(Base):
     doctor = relationship("Doctor", back_populates="appointments")
     local_contexts = relationship(
         "LocalContext", back_populates="appointment")  # fixed name
+    messages = relationship("Message", back_populates="appointment")
 
 
 class GlobalContext(Base):
@@ -83,3 +85,22 @@ class LocalContext(Base):
     # relationship
     appointment = relationship(
         "Appointment", back_populates="local_contexts")  # fixed name
+
+
+class SenderType(enum.Enum):
+    patient = "patient"
+    bot = "bot"
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    id = Column(Integer, primary_key=True)
+    appointment_id = Column(Integer, ForeignKey(
+        "appointments.id"), nullable=True)
+    sender = Column(Enum(SenderType), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, default=text('now()'))
+
+    # relationship
+    appointment = relationship("Appointment", back_populates="messages")
