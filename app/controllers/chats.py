@@ -3,6 +3,11 @@ from ..schemas import ApiResponse, MessageCreate, AccessTokenPayload
 from sqlalchemy.orm import Session
 from ..models import Message, Appointment
 import time
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def send_bot_message(body: MessageCreate, login_user: AccessTokenPayload, appointment_id: int, db: Session):
@@ -25,9 +30,20 @@ def send_bot_message(body: MessageCreate, login_user: AccessTokenPayload, appoin
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR, "failed to send message")
 
-    # TODO integrate LLM
-    bot_resp = f"this is response from bot for {body.message}"
-    time.sleep(10)
+   # --- Gemini LLM Integration ---
+    try:
+        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+        # models = genai.list_models()
+        # for model in models:
+        #     print(model.name, model.supported_generation_methods)
+
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
+        response = model.generate_content(body.message)
+        bot_resp = response.parts[0].text
+        # print("Gemini raw response:", response)
+        # print("Bot reply:", bot_resp)
+    except Exception as e:
+        bot_resp = f"Bot error: {str(e)}"
 
     try:
         new_msg = Message(appointment_id=appointment_id,
