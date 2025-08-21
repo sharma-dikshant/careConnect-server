@@ -1,13 +1,42 @@
-from email import message
-from fastapi import HTTPException, status
+import os
+import uuid
+import shutil
+from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
-from ..schemas import CreateContext, AccessTokenPayload, ApiResponse
+from ..schemas import AccessTokenPayload, ApiResponse
 from ..models import GlobalContext, LocalContext, Appointment
 
 
-def add_global_context(context: CreateContext, login_user: AccessTokenPayload, db: Session):
-    new_g_context = GlobalContext(doctor_id=login_user.id, file=context.file)
+UPLOAD_DIR = "uploads/"
+allowed_ext = ['.pdf']
 
+
+def add_global_context(context: UploadFile, login_user: AccessTokenPayload, db: Session):
+    # create global folder if not exits
+    doctor_folder = os.path.join(UPLOAD_DIR, "globals", str(login_user.id))
+    os.makedirs(doctor_folder, exist_ok=True)
+
+    # validate extension
+    ext = os.path.splitext(context.filename)[1].lower()
+    if ext not in allowed_ext:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST,
+                            detail=f"File type {ext} not allowed.")
+
+    # Generate unique file name
+    filename = f"{uuid.uuid4()}_{context.filename}"
+    filepath = os.path.join(doctor_folder, filename)
+    filepath = filepath.replace("\\", "/")
+    # save locally
+    try:
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(context.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save file: {str(e)}"
+        )
+
+    new_g_context = GlobalContext(doctor_id=login_user.id, file=filepath)
     try:
         db.add(new_g_context)
         db.commit()
@@ -15,12 +44,12 @@ def add_global_context(context: CreateContext, login_user: AccessTokenPayload, d
     except:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            f"failed to add global contxt {new_g_context}")
+                            detail=f"failed to add global contxt {new_g_context}")
 
-    return ApiResponse(message="success", data=CreateContext.model_validate(new_g_context))
+    return ApiResponse(message="success", data={"file": filepath})
 
 
-def add_patient_context(context: CreateContext, appointment_id: int, login_user: AccessTokenPayload, db: Session):
+def add_patient_context(appointment_id: int, context: UploadFile, login_user: AccessTokenPayload, db: Session):
     appointment = db.query(Appointment).filter(
         Appointment.id == appointment_id, Appointment.doctor_id == login_user.id).first()
 
@@ -28,8 +57,33 @@ def add_patient_context(context: CreateContext, appointment_id: int, login_user:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
                             f"you're not allow to add context to appointment id: {appointment_id}")
 
+    # make dir
+    appointment_folder = os.path.join(
+        UPLOAD_DIR, "locals", str(appointment_id))
+    os.makedirs(appointment_folder, exist_ok=True)
+
+    # validate extension
+    ext = os.path.splitext(context.filename)[1].lower()
+
+    if ext not in allowed_ext:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST,
+                            f"file type {ext} is not allowed")
+
+    # generate unique file name
+    filename = f"{uuid.uuid4()}_{context.filename}"
+    filepath = os.path.join(appointment_folder, filename)
+    filepath = filepath.replace("\\", '/')
+
+    # save file
+    try:
+        with open(filepath, 'wb') as buffer:
+            shutil.copyfileobj(context.file, buffer)
+    except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"failed to save file {str(e)}")
+
     new_l_context = LocalContext(
-        appointment_id=appointment_id, file=context.file)
+        appointment_id=appointment_id, file=filepath)
 
     try:
         db.add(new_l_context)
@@ -38,47 +92,9 @@ def add_patient_context(context: CreateContext, appointment_id: int, login_user:
     except:
         db.rollback()
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            f"failed to add global contxt {new_l_context}")
+                            f"failed to add patient contxt {new_l_context}")
 
-    return ApiResponse(message="success", data=CreateContext.model_validate(new_l_context))
-
-
-def add_global_context(context: CreateContext, login_user: AccessTokenPayload, db: Session):
-    new_g_context = GlobalContext(doctor_id=login_user.id, file=context.file)
-
-    try:
-        db.add(new_g_context)
-        db.commit()
-        db.refresh(new_g_context)
-    except:
-        db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            f"failed to add global contxt {new_g_context}")
-
-    return ApiResponse(message="success", data=CreateContext.model_validate(new_g_context))
-
-
-def add_patient_context(context: CreateContext, appointment_id: int, login_user: AccessTokenPayload, db: Session):
-    appointment = db.query(Appointment).filter(
-        Appointment.id == appointment_id, Appointment.doctor_id == login_user.id).first()
-
-    if not appointment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND,
-                            f"you're not allow to add context to appointment id: {appointment_id}")
-
-    new_l_context = LocalContext(
-        appointment_id=appointment_id, file=context.file)
-
-    try:
-        db.add(new_l_context)
-        db.commit()
-        db.refresh(new_l_context)
-    except:
-        db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            f"failed to add global contxt {new_l_context}")
-
-    return ApiResponse(message="success", data=CreateContext.model_validate(new_l_context))
+    return ApiResponse(message="success", data={"file": filepath})
 
 
 def remove_global_context(context_id: int, login_user: AccessTokenPayload, db: Session):

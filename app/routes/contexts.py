@@ -1,28 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from ..controllers import contexts as controller
 from ..deps import get_db
-from ..schemas import AccessTokenPayload, CreateContext
+from ..schemas import AccessTokenPayload
 from ..oauth2 import get_current_user
 
 router = APIRouter(prefix='/api/contexts', tags=['Contexts'])
 
 
-@router.post("/")
-async def add_global_context(body: CreateContext, login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
+@router.post("/globals")
+async def add_global_context(file: UploadFile = File(...), login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
     if login_user.role is not "doctor":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                             detail="you're not allowed to perform this action")
-    return controller.add_global_context(body, login_user, db)
+    return controller.add_global_context(file, login_user, db)
 
 
-@router.post("/{appointment_id}")
-async def add_patient_context(body: CreateContext, appointment_id, login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
+@router.post("/locals/{appointment_id}")
+async def add_patient_context(appointment_id, file: UploadFile = File(...), login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
     if login_user.role is not "doctor":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                             detail="you're not allowed to perform this action")
-    return controller.add_patient_context(body, appointment_id, login_user, db)
+    return controller.add_patient_context(appointment_id, file, login_user, db)
 
 
 @router.delete("/globals/{context_id}")
