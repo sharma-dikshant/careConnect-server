@@ -15,3 +15,8 @@ def get_query(body: MessageCreate, appointment_id: int, login_user: AccessTokenP
         raise HTTPException(status.HTTP_400_BAD_REQUEST,
                             "this service is only for patients")
     return controller.send_bot_message(body, login_user, appointment_id, db)
+
+
+@router.get("/{appointment_id}")
+def get_query(appointment_id: int, login_user: AccessTokenPayload = Depends(get_current_user),  db: Session = Depends(get_db)):
+    return {"data": f"all chats of {appointment_id}"}

@@ -16,12 +16,28 @@ async def add_global_context(file: UploadFile = File(...), login_user: AccessTok
     return controller.add_global_context(file, login_user, db)
 
 
+@router.get("/globals")
+async def add_global_context(login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
+    if login_user.role is not "doctor":
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                            detail="you're not allowed to perform this action")
+    return {"data": f"global contexts of :{login_user.id}"}
+
+
 @router.post("/locals/{appointment_id}")
 async def add_patient_context(appointment_id, file: UploadFile = File(...), login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
     if login_user.role is not "doctor":
         raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                             detail="you're not allowed to perform this action")
     return controller.add_patient_context(appointment_id, file, login_user, db)
+
+
+@router.get("/locals/{appointment_id}")
+async def add_patient_context(appointment_id, login_user: AccessTokenPayload = Depends(get_current_user), db: Session = Depends(get_db)):
+    if login_user.role is not "doctor":
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                            detail="you're not allowed to perform this action")
+    return {"data": f"local contexts of appointment id: {appointment_id}"}
 
 
 @router.delete("/globals/{context_id}")
