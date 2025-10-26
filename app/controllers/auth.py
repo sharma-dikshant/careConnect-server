@@ -19,6 +19,7 @@ def verify_password(plain_password: str, hashed_password: str):
 
 def login(data: LoginCreate, db: Session):
     if (data.type == "doctor"):
+        print(data)
         return login_doctor(data.email, data.password, db)
     elif (data.type == 'patient'):
         return login_patient(data.email, data.password, db)
