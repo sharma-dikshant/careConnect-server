@@ -1,9 +1,9 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from ..models import Doctor, Patient
-from ..schemas import DoctorCreate, LoginCreate, ApiResponse
+from app.db.models import Doctor, Patient
+from app.schemas import DoctorCreate, LoginCreate, ApiResponse
 from passlib.context import CryptContext
-from .. import oauth2
+from app.core import security as oauth2
 
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")

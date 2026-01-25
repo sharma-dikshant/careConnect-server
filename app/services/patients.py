@@ -1,8 +1,8 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from ..schemas import PatientCreate, AccessTokenPayload, ApiResponse, PatientBase
-from ..models import Patient, Appointment, Doctor
-from ..utils import hash_password
+from app.schemas import PatientCreate, AccessTokenPayload, ApiResponse, PatientBase
+from app.db.models import Patient, Appointment, Doctor
+from app.utils import hash_password
 
 
 def add_patient(body: PatientCreate, login_user: AccessTokenPayload, db: Session):

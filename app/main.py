@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .db_config import SessionLocal, engine, Base
-from .routes.users import router as user_router
-from .routes.auth import router as auth_router
-from .routes.contexts import router as context_router
-from .routes.patients import router as patient_router
-from .routes.chats import router as chat_router
+from app.db.session import SessionLocal, engine
+from app.db.models import Base
+from app.api.v1.endpoints.users import router as user_router
+from app.api.v1.endpoints.auth import router as auth_router
+from app.api.v1.endpoints.contexts import router as context_router
+from app.api.v1.endpoints.patients import router as patient_router
+from app.api.v1.endpoints.chats import router as chat_router
 
 app = FastAPI(title="Care Connect")
 

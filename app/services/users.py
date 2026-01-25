@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from ..models import Doctor, Patient
-from ..schemas import AccessTokenPayload, ApiResponse
+from app.db.models import Doctor, Patient
+from app.schemas import AccessTokenPayload, ApiResponse
 
 
 def get_profile(login_user: AccessTokenPayload, db: Session):

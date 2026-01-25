@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
-from ..schemas import ApiResponse, MessageCreate, AccessTokenPayload
+from app.schemas import ApiResponse, MessageCreate, AccessTokenPayload
 from sqlalchemy.orm import Session
-from ..models import Message, Appointment
+from app.db.models import Message, Appointment
 import time
 import os
 import google.generativeai as genai

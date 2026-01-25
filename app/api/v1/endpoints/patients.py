@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from ..controllers import patients as controller
+from app.services import patients as controller
 from sqlalchemy.orm import Session
-from ..schemas import PatientCreate, AccessTokenPayload
-from ..deps import get_db
-from ..oauth2 import get_current_user
+from app.schemas import PatientCreate, AccessTokenPayload
+from app.api.deps import get_db
+from app.core.security import get_current_user
 from pydantic import BaseModel
 from typing import Optional
 

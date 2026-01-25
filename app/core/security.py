@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from .deps import get_db
-from .models import Doctor, Patient
-from .schemas import AccessTokenPayload
+from app.api.deps import get_db
+from app.db.models import Doctor, Patient
+from app.schemas import AccessTokenPayload
 
 
 SECRET_KEY = "my_secret_key"

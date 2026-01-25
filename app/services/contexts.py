@@ -3,8 +3,8 @@ import uuid
 import shutil
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
-from ..schemas import AccessTokenPayload, ApiResponse
-from ..models import GlobalContext, LocalContext, Appointment
+from app.schemas import AccessTokenPayload, ApiResponse
+from app.db.models import GlobalContext, LocalContext, Appointment
 
 
 UPLOAD_DIR = "uploads/"
