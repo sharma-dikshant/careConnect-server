@@ -1,8 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Appointment } from './appointment.entity';
 
-@Entity('local_contexts')
-export class LocalContext {
+@Entity('appointment_protocols')
+export class AppointmentProtocol {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,7 +25,10 @@ export class LocalContext {
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @ManyToOne(() => Appointment, (appointment) => appointment.local_contexts)
+  @ManyToOne(
+    () => Appointment,
+    (appointment) => appointment.appointment_protocols,
+  )
   @JoinColumn({ name: 'appointment_id' })
   appointment: Appointment;
 }

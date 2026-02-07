@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Put, Delete, Patch, Body, Param, UseGuards, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Patch,
+  Body,
+  Param,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { PatientsService } from './patients.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -47,7 +58,11 @@ export class PatientsController {
     @Body() patientData: PatientUpdateDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.patientsService.updatePatient(patientId, patientData, loginUser);
+    return this.patientsService.updatePatient(
+      patientId,
+      patientData,
+      loginUser,
+    );
   }
 
   @Delete(':patientId')

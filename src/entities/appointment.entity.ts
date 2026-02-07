@@ -1,7 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 import { Doctor } from './doctor.entity';
 import { Patient } from './patient.entity';
-import { LocalContext } from './local-context.entity';
+import { AppointmentProtocol } from './appointment_protocol';
 import { Message } from './message.entity';
 
 @Entity('appointments')
@@ -29,8 +37,11 @@ export class Appointment {
   @JoinColumn({ name: 'doctor_id' })
   doctor: Doctor;
 
-  @OneToMany(() => LocalContext, (localContext) => localContext.appointment)
-  local_contexts: LocalContext[];
+  @OneToMany(
+    () => AppointmentProtocol,
+    (appointment_protocol) => appointment_protocol.appointment,
+  )
+  appointment_protocols: AppointmentProtocol[];
 
   @OneToMany(() => Message, (message) => message.appointment)
   messages: Message[];

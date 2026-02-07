@@ -6,8 +6,8 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
-import { ContextsModule } from './contexts/contexts.module';
-import { ChatsModule } from './chats/chats.module';
+import { CareProtocolsModule } from './care_protocols/care_protocols.module';
+import { MessagesModule } from './messages/messages.module';
 import { S3Module } from './utils/s3.module';
 
 @Module({
@@ -21,8 +21,8 @@ import { S3Module } from './utils/s3.module';
     AuthModule,
     UsersModule,
     PatientsModule,
-    ContextsModule,
-    ChatsModule,
+    CareProtocolsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

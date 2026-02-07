@@ -1,5 +1,15 @@
-import { Controller, Post, Get, Body, Param, UseGuards, ParseIntPipe, HttpException, HttpStatus } from '@nestjs/common';
-import { ChatsService } from './chats.service';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  UseGuards,
+  ParseIntPipe,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+import { MessagesService } from './messages.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -10,8 +20,8 @@ import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Controller('api/chats')
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
+export class MessagesController {
+  constructor(private readonly MessagesService: MessagesService) {}
 
   @Post(':appointmentId')
   @Roles('patient')
@@ -21,13 +31,18 @@ export class ChatsController {
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
     if (loginUser.role !== 'patient') {
-      throw new HttpException('this service is only for patients', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'this service is only for patients',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    return this.chatsService.sendBotMessage(body, loginUser, appointmentId);
+    return this.MessagesService.sendBotMessage(body, loginUser, appointmentId);
   }
 
   @Get(':appointmentId')
-  async getMessages(@Param('appointmentId', ParseIntPipe) appointmentId: number) {
-    return { data: `all chats of ${appointmentId}` };
+  async getMessages(
+    @Param('appointmentId', ParseIntPipe) appointmentId: number,
+  ) {
+    return { data: `all Messages of ${appointmentId}` };
   }
 }

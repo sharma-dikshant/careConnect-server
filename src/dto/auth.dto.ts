@@ -1,4 +1,11 @@
-import { IsEmail, IsString, IsEnum, IsInt, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  MinLength,
+} from 'class-validator';
 
 export class LoginDto {
   @IsEnum(['doctor', 'patient'])

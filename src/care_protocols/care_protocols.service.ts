@@ -1,8 +1,8 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GlobalContext } from '../entities/global-context.entity';
-import { LocalContext } from '../entities/local-context.entity';
+import { CareProtocol } from '../entities/care_protocol.entity';
+import { AppointmentProtocol } from '../entities/appointment_protocol';
 import { Appointment } from '../entities/appointment.entity';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
@@ -13,28 +13,31 @@ import { v4 as uuidv4 } from 'uuid';
 const ALLOWED_EXT = ['.pdf'];
 
 @Injectable()
-export class ContextsService {
+export class CareProtocolsService {
   constructor(
-    @InjectRepository(GlobalContext)
-    private globalContextRepository: Repository<GlobalContext>,
-    @InjectRepository(LocalContext)
-    private localContextRepository: Repository<LocalContext>,
+    @InjectRepository(CareProtocol)
+    private careProtocolRepository: Repository<CareProtocol>,
+    @InjectRepository(AppointmentProtocol)
+    private appointmentProtocolRepository: Repository<AppointmentProtocol>,
     @InjectRepository(Appointment)
     private appointmentRepository: Repository<Appointment>,
     private s3Service: S3Service,
   ) {}
 
-  async addGlobalContext(
+  async addCareProtocol(
     file: Express.Multer.File,
     loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
     const ext = path.extname(file.originalname).toLowerCase();
     if (!ALLOWED_EXT.includes(ext)) {
-      throw new HttpException(`File type ${ext} not allowed.`, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        `File type ${ext} not allowed.`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const filename = `${uuidv4()}_${file.originalname}`;
-    const s3Key = `globals/${loginUser.id}/${filename}`;
+    const s3Key = `uploads/globals/${loginUser.id}/${filename}`;
 
     try {
       const s3Url = await this.s3Service.uploadFile(
@@ -43,12 +46,12 @@ export class ContextsService {
         file.mimetype,
       );
 
-      const newGlobalContext = this.globalContextRepository.create({
+      const newGlobalContext = this.careProtocolRepository.create({
         doctor_id: loginUser.id,
         file: s3Url,
       });
 
-      await this.globalContextRepository.save(newGlobalContext);
+      await this.careProtocolRepository.save(newGlobalContext);
       return new ApiResponseDto('success', { file: s3Url });
     } catch (error) {
       throw new HttpException(
@@ -58,7 +61,59 @@ export class ContextsService {
     }
   }
 
-  async addPatientContext(
+  async getAllCareProtocolsByDoctorId(id: number) {
+    try {
+      const protocols = await this.careProtocolRepository.find({
+        where: { doctor_id: id },
+      });
+
+      if (!protocols) {
+        throw new HttpException(
+          `No care protocols found`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+    } catch (error) {
+      throw new HttpException(
+        `Failed to found: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getAllCareProtocolsByAppointmentId(id: number) {
+    try {
+      const appointment = await this.appointmentRepository.findOne({
+        where: { id },
+        select: { id: true },
+      });
+
+      if (!appointment) {
+        throw new HttpException(
+          `no appointment found with id ${id}`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      const careProtocols = await this.appointmentProtocolRepository.find({
+        where: { appointment_id: id },
+      });
+
+      if (!careProtocols) {
+        throw new HttpException(
+          `no care protocols found for appointment with id ${id}`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+    } catch (error) {
+      throw new HttpException(
+        `Failed to found care protocols for appointment: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async addAppointmentCareProtocol(
     appointmentId: number,
     file: Express.Multer.File,
     loginUser: AccessTokenPayloadDto,
@@ -76,11 +131,14 @@ export class ContextsService {
 
     const ext = path.extname(file.originalname).toLowerCase();
     if (!ALLOWED_EXT.includes(ext)) {
-      throw new HttpException(`file type ${ext} is not allowed`, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        `file type ${ext} is not allowed`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const filename = `${uuidv4()}_${file.originalname}`;
-    const s3Key = `locals/${appointmentId}/${filename}`;
+    const s3Key = `uploads/locals/${appointmentId}/${filename}`;
 
     try {
       const s3Url = await this.s3Service.uploadFile(
@@ -89,12 +147,12 @@ export class ContextsService {
         file.mimetype,
       );
 
-      const newLocalContext = this.localContextRepository.create({
+      const newLocalContext = this.appointmentProtocolRepository.create({
         appointment_id: appointmentId,
         file: s3Url,
       });
 
-      await this.localContextRepository.save(newLocalContext);
+      await this.appointmentProtocolRepository.save(newLocalContext);
       return new ApiResponseDto('success', { file: s3Url });
     } catch (error) {
       throw new HttpException(
@@ -104,12 +162,14 @@ export class ContextsService {
     }
   }
 
-  async removeGlobalContext(
+  async removeCareProtocol(
     contextId: number,
     loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    const context = await this.globalContextRepository.findOne({ where: { id: contextId } });
-    
+    const context = await this.careProtocolRepository.findOne({
+      where: { id: contextId },
+    });
+
     if (!context) {
       throw new HttpException(
         `no global context found with id: ${contextId}`,
@@ -126,7 +186,7 @@ export class ContextsService {
 
     try {
       context.active = false;
-      await this.globalContextRepository.save(context);
+      await this.careProtocolRepository.save(context);
       return new ApiResponseDto('success', 'inactive global context');
     } catch (error) {
       throw new HttpException(
@@ -136,11 +196,11 @@ export class ContextsService {
     }
   }
 
-  async removeLocalContext(
+  async removeAppointmentCareProtocol(
     contextId: number,
     loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    const context = await this.localContextRepository.findOne({
+    const context = await this.appointmentProtocolRepository.findOne({
       where: { id: contextId },
       relations: ['appointment'],
     });
@@ -161,7 +221,7 @@ export class ContextsService {
 
     try {
       context.active = false;
-      await this.localContextRepository.save(context);
+      await this.appointmentProtocolRepository.save(context);
       return new ApiResponseDto('success', 'inactive local context');
     } catch (error) {
       throw new HttpException(

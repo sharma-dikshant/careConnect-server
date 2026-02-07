@@ -17,8 +17,10 @@ export class UsersService {
 
   async getProfile(loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
     if (loginUser.role === 'doctor') {
-      const doctor = await this.doctorRepository.findOne({ where: { id: loginUser.id } });
-      
+      const doctor = await this.doctorRepository.findOne({
+        where: { id: loginUser.id },
+      });
+
       if (!doctor) {
         return new ApiResponseDto('Doctor not found', null);
       }
@@ -41,8 +43,10 @@ export class UsersService {
 
       return new ApiResponseDto('Profile retrieved successfully', profileData);
     } else if (loginUser.role === 'patient') {
-      const patient = await this.patientRepository.findOne({ where: { id: loginUser.id } });
-      
+      const patient = await this.patientRepository.findOne({
+        where: { id: loginUser.id },
+      });
+
       if (!patient) {
         return new ApiResponseDto('Patient not found', null);
       }
@@ -61,7 +65,9 @@ export class UsersService {
     return new ApiResponseDto('Invalid user role', null);
   }
 
-  async updateProfile(loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
+  async updateProfile(
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
     return new ApiResponseDto('success', 'update profile');
   }
 }

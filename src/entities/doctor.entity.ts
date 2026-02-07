@@ -1,13 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Appointment } from './appointment.entity';
-import { GlobalContext } from './global-context.entity';
+import { CareProtocol } from './care_protocol.entity';
 
 @Entity('doctors')
 export class Doctor {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'int' })
   id: number;
 
-  @Column({ length: 255 })
+  @Column()
   name: string;
 
   @Column({ length: 255, unique: true })
@@ -49,6 +55,6 @@ export class Doctor {
   @OneToMany(() => Appointment, (appointment) => appointment.doctor)
   appointments: Appointment[];
 
-  @OneToMany(() => GlobalContext, (globalContext) => globalContext.doctor)
-  global_contexts: GlobalContext[];
+  @OneToMany(() => CareProtocol, (careProtocol) => careProtocol.doctor)
+  care_protocols: CareProtocol[];
 }

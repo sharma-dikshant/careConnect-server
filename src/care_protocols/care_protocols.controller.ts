@@ -10,7 +10,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ContextsService } from './contexts.service';
+import { CareProtocolsService } from './care_protocols.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -18,54 +18,70 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 
-@Controller('api/contexts')
+@Controller('api/care-protocols')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('doctor')
-export class ContextsController {
-  constructor(private readonly contextsService: ContextsService) {}
+export class CareProtocolsController {
+  constructor(private readonly careProtocolsService: CareProtocolsService) {}
 
-  @Post('globals')
+  // POST ROUTES
+  @Roles('doctor')
+  @Post('')
   @UseInterceptors(FileInterceptor('file'))
-  async addGlobalContext(
+  async addCareProtocol(
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.contextsService.addGlobalContext(file, loginUser);
+    return this.careProtocolsService.addCareProtocol(file, loginUser);
   }
 
-  @Get('globals')
-  async getGlobalContexts(@CurrentUser() loginUser: AccessTokenPayloadDto) {
-    return { data: `global contexts of :${loginUser.id}` };
-  }
-
+  @Roles('doctor', 'patient')
   @Post('locals/:appointmentId')
   @UseInterceptors(FileInterceptor('file'))
-  async addPatientContext(
+  async addAppointmentCareProtocol(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.contextsService.addPatientContext(appointmentId, file, loginUser);
+    return this.careProtocolsService.addAppointmentCareProtocol(
+      appointmentId,
+      file,
+      loginUser,
+    );
   }
 
-  @Get('locals/:appointmentId')
-  async getLocalContexts(@Param('appointmentId', ParseIntPipe) appointmentId: number) {
-    return { data: `local contexts of appointment id: ${appointmentId}` };
+  // GET ROUTES
+  @Roles('doctor')
+  @Get('')
+  async getAllCareProtocolsByDoctorId(
+    @CurrentUser() loginUser: AccessTokenPayloadDto,
+  ) {
+    return this.careProtocolsService.getAllCareProtocolsByDoctorId(
+      loginUser.id,
+    );
   }
 
-  @Delete('globals/:contextId')
-  async removeGlobalContext(
+  @Get(':id')
+  async getCareProtocolById(@Param('id', ParseIntPipe) id: number) {}
+
+  // DELETE ROUTE
+  @Roles('doctor')
+  @Delete('appointments/:contextId')
+  async removeCareProtocol(
     @Param('contextId', ParseIntPipe) contextId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.contextsService.removeGlobalContext(contextId, loginUser);
+    return this.careProtocolsService.removeCareProtocol(contextId, loginUser);
   }
 
-  @Delete('locals/:contextId')
-  async removeLocalContext(
+  @Roles('doctor')
+  @Delete('appointments/:contextId')
+  async removeAppointmentCareProtocol(
     @Param('contextId', ParseIntPipe) contextId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.contextsService.removeLocalContext(contextId, loginUser);
+    return this.careProtocolsService.removeAppointmentCareProtocol(
+      contextId,
+      loginUser,
+    );
   }
 }

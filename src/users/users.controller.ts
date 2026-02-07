@@ -11,12 +11,16 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  async getProfile(@CurrentUser() loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
+  async getProfile(
+    @CurrentUser() loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
     return this.usersService.getProfile(loginUser);
   }
 
   @Patch()
-  async updateProfile(@CurrentUser() loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
+  async updateProfile(
+    @CurrentUser() loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
     return this.usersService.updateProfile(loginUser);
   }
 }

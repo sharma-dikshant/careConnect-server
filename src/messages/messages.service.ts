@@ -7,11 +7,11 @@ import { Appointment } from '../entities/appointment.entity';
 import { MessageCreateDto } from '../dto/message.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios from 'axios';
 
 @Injectable()
-export class ChatsService {
-  private genAI: GoogleGenerativeAI;
+export class MessagesService {
+  private ragServerBaseUrl: string;
 
   constructor(
     @InjectRepository(Message)
@@ -20,8 +20,9 @@ export class ChatsService {
     private appointmentRepository: Repository<Appointment>,
     private configService: ConfigService,
   ) {
-    const apiKey = this.configService.get('GOOGLE_API_KEY');
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.ragServerBaseUrl = this.configService.getOrThrow<string>(
+      'BOT_SERVER_BASE_URL',
+    );
   }
 
   async sendBotMessage(
@@ -49,15 +50,22 @@ export class ChatsService {
 
       await this.messageRepository.save(newMsg);
     } catch (error) {
-      throw new HttpException('failed to send message', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'failed to send message',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     let botResp: string;
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
-      const result = await model.generateContent(body.message);
-      const response = await result.response;
-      botResp = response.text();
+      const result = await axios.post(`${this.ragServerBaseUrl}/query`, {
+        query: body.message,
+        patient_id: appointment.patient_id,
+        doctor_id: appointment.doctor_id,
+      });
+
+      //TODO fix the bot response
+      botResp = result.data as string;
     } catch (error) {
       botResp = `Bot error: ${error.message}`;
     }
@@ -71,7 +79,10 @@ export class ChatsService {
 
       await this.messageRepository.save(botMsg);
     } catch (error) {
-      throw new HttpException('failed to send message', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'failed to send message',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return new ApiResponseDto('success', { message: botResp });

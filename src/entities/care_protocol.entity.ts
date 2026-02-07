@@ -1,8 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Doctor } from './doctor.entity';
 
-@Entity('global_contexts')
-export class GlobalContext {
+@Entity('care_protocols')
+export class CareProtocol {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,7 +25,7 @@ export class GlobalContext {
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @ManyToOne(() => Doctor, (doctor) => doctor.global_contexts)
+  @ManyToOne(() => Doctor, (doctor) => doctor.care_protocols)
   @JoinColumn({ name: 'doctor_id' })
   doctor: Doctor;
 }

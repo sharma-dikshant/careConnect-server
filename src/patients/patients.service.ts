@@ -20,8 +20,13 @@ export class PatientsService {
     private doctorRepository: Repository<Doctor>,
   ) {}
 
-  async addPatient(body: PatientCreateDto, loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
-    const existing = await this.patientRepository.findOne({ where: { email: body.email } });
+  async addPatient(
+    body: PatientCreateDto,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const existing = await this.patientRepository.findOne({
+      where: { email: body.email },
+    });
 
     if (existing) {
       throw new HttpException(
@@ -52,13 +57,21 @@ export class PatientsService {
         email: newPatient.email,
       });
     } catch (error) {
-      throw new HttpException('failed to add patient', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'failed to add patient',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  async getAllPatients(doctorId: number, loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
-    const doctor = await this.doctorRepository.findOne({ where: { id: doctorId } });
-    
+  async getAllPatients(
+    doctorId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: doctorId },
+    });
+
     if (!doctor) {
       throw new HttpException('Doctor not found', HttpStatus.NOT_FOUND);
     }
@@ -89,9 +102,14 @@ export class PatientsService {
     return new ApiResponseDto('Patients retrieved successfully', patients);
   }
 
-  async getPatient(patientId: number, loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
-    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
-    
+  async getPatient(
+    patientId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
+
     if (!patient) {
       throw new HttpException('Patient not found', HttpStatus.NOT_FOUND);
     }
@@ -101,7 +119,10 @@ export class PatientsService {
     });
 
     if (!appointment) {
-      throw new HttpException("You don't have access to this patient", HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        "You don't have access to this patient",
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const patientData = {
@@ -130,8 +151,10 @@ export class PatientsService {
     patientData: PatientUpdateDto,
     loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
-    
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
+
     if (!patient) {
       throw new HttpException('Patient not found', HttpStatus.NOT_FOUND);
     }
@@ -141,7 +164,10 @@ export class PatientsService {
     });
 
     if (!appointment) {
-      throw new HttpException("You don't have access to this patient", HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        "You don't have access to this patient",
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     try {
@@ -154,13 +180,21 @@ export class PatientsService {
         email: patient.email,
       });
     } catch (error) {
-      throw new HttpException('Failed to update patient', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to update patient',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  async deletePatient(patientId: number, loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
-    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
-    
+  async deletePatient(
+    patientId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
+
     if (!patient) {
       throw new HttpException('Patient not found', HttpStatus.NOT_FOUND);
     }
@@ -170,7 +204,10 @@ export class PatientsService {
     });
 
     if (!appointment) {
-      throw new HttpException("You don't have access to this patient", HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        "You don't have access to this patient",
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     try {
@@ -179,12 +216,20 @@ export class PatientsService {
 
       return new ApiResponseDto('Patient removed successfully', null);
     } catch (error) {
-      throw new HttpException('Failed to delete patient', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to delete patient',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  async inactivePatient(patientId: number, loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
-    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+  async inactivePatient(
+    patientId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
 
     if (!patient) {
       throw new HttpException(
@@ -198,7 +243,10 @@ export class PatientsService {
     });
 
     if (!appointment) {
-      throw new HttpException("You don't have access to this patient", HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        "You don't have access to this patient",
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     try {
@@ -207,7 +255,10 @@ export class PatientsService {
 
       return new ApiResponseDto('Patient deactivated successfully', null);
     } catch (error) {
-      throw new HttpException('failed to inactive patient', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'failed to inactive patient',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

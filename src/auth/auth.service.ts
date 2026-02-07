@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
-import { LoginDto, DoctorSignupDto, AccessTokenPayloadDto } from '../dto/auth.dto';
+import {
+  LoginDto,
+  DoctorSignupDto,
+  AccessTokenPayloadDto,
+} from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { hashPassword, verifyPassword } from '../utils/password.util';
 
@@ -24,15 +28,21 @@ export class AuthService {
     } else if (data.type === 'patient') {
       return this.loginPatient(data.email, data.password);
     }
-    
+
     throw new HttpException('Invalid login type', HttpStatus.BAD_REQUEST);
   }
 
-  private async loginDoctor(email: string, password: string): Promise<ApiResponseDto> {
+  private async loginDoctor(
+    email: string,
+    password: string,
+  ): Promise<ApiResponseDto> {
     const existing = await this.doctorRepository.findOne({ where: { email } });
-    
+
     if (!existing) {
-      throw new HttpException('No doctor exist with given email id', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'No doctor exist with given email id',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const isPasswordValid = await verifyPassword(password, existing.password);
@@ -51,11 +61,17 @@ export class AuthService {
     return new ApiResponseDto('logged in', { token, type: 'Bearer' });
   }
 
-  private async loginPatient(email: string, password: string): Promise<ApiResponseDto> {
+  private async loginPatient(
+    email: string,
+    password: string,
+  ): Promise<ApiResponseDto> {
     const existing = await this.patientRepository.findOne({ where: { email } });
-    
+
     if (!existing) {
-      throw new HttpException('No patient exist with given email id', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'No patient exist with given email id',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const isPasswordValid = await verifyPassword(password, existing.password);
@@ -75,10 +91,15 @@ export class AuthService {
   }
 
   async signup(doctor: DoctorSignupDto): Promise<ApiResponseDto> {
-    const existing = await this.doctorRepository.findOne({ where: { email: doctor.email } });
-    
+    const existing = await this.doctorRepository.findOne({
+      where: { email: doctor.email },
+    });
+
     if (existing) {
-      throw new HttpException('user with this email already exists', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'user with this email already exists',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     try {
@@ -100,11 +121,17 @@ export class AuthService {
       const token = this.jwtService.sign(payload);
       return new ApiResponseDto('signed up', { token, type: 'Bearer' });
     } catch (error) {
-      throw new HttpException('failed to create account', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'failed to create account',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async logout(): Promise<ApiResponseDto> {
-    return new ApiResponseDto('logged out', { token: 'invalid', type: 'Bearer' });
+    return new ApiResponseDto('logged out', {
+      token: 'invalid',
+      type: 'Bearer',
+    });
   }
 }
