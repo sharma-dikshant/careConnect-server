@@ -1,20 +1,56 @@
-FROM python:3.11-slim
+# Development stage
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
-# Install system dependencies (needed for mysqlclient/pymysql sometimes, though pymysql is pure python)
-# But pkg-config or gcc might be needed for other things. 
-# For now, slim is often enough for pymysql.
-RUN apt-get update && apt-get install -y \
-    gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+# Copy package files
+COPY package*.json ./
 
-COPY requirements.txt .
+# Install dependencies
+RUN npm ci
 
-RUN pip install --no-cache-dir -r requirements.txt
-
+# Copy source code
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "start:dev"]
+
+# Production build stage
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built application from build stage
+COPY --from=build /app/dist ./dist
+
+# Expose port
+EXPOSE 3000
+
+# Start production server
+CMD ["node", "dist/main"]
