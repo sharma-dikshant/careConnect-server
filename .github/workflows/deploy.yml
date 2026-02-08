@@ -3,7 +3,7 @@ name: Deploy to EC2 (Nest)
 on:
   push:
     branches:
-      - main
+      - feature/nestjs-migration
 
 jobs:
   deploy:
