@@ -44,7 +44,7 @@ export class MessagesService {
     try {
       const newMsg = this.messageRepository.create({
         appointment_id: appointmentId,
-        sender: body.sender as SenderType,
+        sender: SenderType.PATIENT,
         message: body.message,
       });
 
@@ -64,8 +64,7 @@ export class MessagesService {
         doctor_id: appointment.doctor_id,
       });
 
-      //TODO fix the bot response
-      botResp = result.data as string;
+      botResp = result.data.answer as string;
     } catch (error) {
       botResp = `Bot error: ${error.message}`;
     }

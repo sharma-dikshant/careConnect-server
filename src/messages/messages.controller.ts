@@ -18,24 +18,18 @@ import { MessageCreateDto } from '../dto/message.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 
-@Controller('api/chats')
+@Controller('api/messages')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MessagesController {
   constructor(private readonly MessagesService: MessagesService) {}
 
-  @Post(':appointmentId')
+  @Post('/appointments/:appointmentId')
   @Roles('patient')
   async sendMessage(
     @Body() body: MessageCreateDto,
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    if (loginUser.role !== 'patient') {
-      throw new HttpException(
-        'this service is only for patients',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
     return this.MessagesService.sendBotMessage(body, loginUser, appointmentId);
   }
 
