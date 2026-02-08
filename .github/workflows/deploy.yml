@@ -1,0 +1,44 @@
+name: Deploy to EC2 (Nest)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            set -e
+
+            echo "Moving to project directory ........"
+            cd /home/ubuntu/server/careConnect-server
+
+            echo "Pulling latest code ......"
+            git pull origin feature/nestjs-migration
+
+            echo "Installing dependencies ......"
+            npm install
+
+            echo "Building project ......"
+            npm run build
+
+            echo "Restarting server with PM2 ......"
+            pm2 restart careconnect || pm2 start dist/main.js --name careconnect
+
+            echo "Saving PM2 process list ......"
+            pm2 save
+
+            echo "Deployment completed ........"
