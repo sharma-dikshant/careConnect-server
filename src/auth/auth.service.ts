@@ -92,7 +92,7 @@ export class AuthService {
 
   async signup(doctor: DoctorSignupDto): Promise<ApiResponseDto> {
     const existing = await this.doctorRepository.findOne({
-      where: [{email: doctor.email}, {phone: doctor.phone}],
+      where: [{ email: doctor.email }, { phone: doctor.phone }],
     });
 
     if (existing) {
