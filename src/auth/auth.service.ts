@@ -7,6 +7,8 @@ import { Patient } from '../entities/patient.entity';
 import {
   LoginDto,
   DoctorSignupDto,
+  PatientSignupDto,
+  SignupDto,
   AccessTokenPayloadDto,
 } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
@@ -90,7 +92,7 @@ export class AuthService {
     return new ApiResponseDto('logged in', { token, type: 'Bearer' });
   }
 
-  async signup(doctor: DoctorSignupDto): Promise<ApiResponseDto> {
+  async signupDoctor(doctor: DoctorSignupDto): Promise<ApiResponseDto> {
     const existing = await this.doctorRepository.findOne({
       where: [{ email: doctor.email }, { phone: doctor.phone }],
     });
@@ -105,8 +107,17 @@ export class AuthService {
     try {
       const hashedPassword = await hashPassword(doctor.password);
       const newDoctor = this.doctorRepository.create({
-        ...doctor,
+        name: doctor.name,
+        email: doctor.email,
         password: hashedPassword,
+        phone: doctor.phone,
+        address: doctor.address || '',
+        designation: doctor.designation || '',
+        license: doctor.license || '',
+        specialization: doctor.specialization || '',
+        experience: doctor.experience || 0,
+        bio: doctor.bio || '',
+        hospital: doctor.hospital || '',
       });
 
       await this.doctorRepository.save(newDoctor);
@@ -116,6 +127,45 @@ export class AuthService {
         role: 'doctor',
         name: newDoctor.name,
         email: newDoctor.email,
+      };
+
+      const token = this.jwtService.sign(payload);
+      return new ApiResponseDto('signed up', { token, type: 'Bearer' });
+    } catch (error) {
+      throw new HttpException(
+        'failed to create account',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async signupPatient(patient: PatientSignupDto): Promise<ApiResponseDto> {
+    const existing = await this.patientRepository.findOne({
+      where: { email: patient.email },
+    });
+
+    if (existing) {
+      throw new HttpException(
+        'user with this email already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    try {
+      const hashedPassword = await hashPassword(patient.password);
+      const newPatient = this.patientRepository.create({
+        name: patient.name,
+        email: patient.email,
+        password: hashedPassword,
+      });
+
+      await this.patientRepository.save(newPatient);
+
+      const payload: AccessTokenPayloadDto = {
+        id: newPatient.id,
+        role: 'patient',
+        name: newPatient.name,
+        email: newPatient.email,
       };
 
       const token = this.jwtService.sign(payload);

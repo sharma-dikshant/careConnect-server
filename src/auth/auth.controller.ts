@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, DoctorSignupDto } from '../dto/auth.dto';
+import { LoginDto, DoctorSignupDto, PatientSignupDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Controller('api/auth')
@@ -12,9 +12,14 @@ export class AuthController {
     return this.authService.login(body);
   }
 
-  @Post('signup')
-  async signup(@Body() body: DoctorSignupDto): Promise<ApiResponseDto> {
-    return this.authService.signup(body);
+  @Post('signup/doctor')
+  async signupDoctor(@Body() body: DoctorSignupDto): Promise<ApiResponseDto> {
+    return this.authService.signupDoctor(body);
+  }
+
+  @Post('signup/patient')
+  async signupPatient(@Body() body: PatientSignupDto): Promise<ApiResponseDto> {
+    return this.authService.signupPatient(body);
   }
 
   @Post('logout')

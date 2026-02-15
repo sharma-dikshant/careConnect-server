@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { PatientsModule } from './patients/patients.module';
 import { CareProtocolsModule } from './care_protocols/care_protocols.module';
 import { MessagesModule } from './messages/messages.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 import { S3Module } from './utils/s3.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { S3Module } from './utils/s3.module';
     PatientsModule,
     CareProtocolsModule,
     MessagesModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

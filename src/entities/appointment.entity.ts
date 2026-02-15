@@ -23,6 +23,12 @@ export class Appointment {
   @Column()
   doctor_id: number;
 
+  @Column({ length: 255, nullable: true, default: 'Appointment' })
+  title: string;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
   @Column({ default: true })
   active: boolean;
 
