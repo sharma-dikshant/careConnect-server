@@ -92,12 +92,12 @@ export class AuthService {
 
   async signup(doctor: DoctorSignupDto): Promise<ApiResponseDto> {
     const existing = await this.doctorRepository.findOne({
-      where: { email: doctor.email },
+      where: [{email: doctor.email}, {phone: doctor.phone}],
     });
 
     if (existing) {
       throw new HttpException(
-        'user with this email already exists',
+        'user with this email or phone already exists',
         HttpStatus.BAD_REQUEST,
       );
     }

@@ -10,6 +10,7 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -21,6 +22,7 @@ import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Controller('api/patients')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
@@ -33,13 +35,12 @@ export class PatientsController {
     return this.patientsService.addPatient(body, loginUser);
   }
 
-  @Get('all/:doctorId')
+  @Get('all')
   @Roles('doctor')
   async getAllPatients(
-    @Param('doctorId', ParseIntPipe) doctorId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.patientsService.getAllPatients(doctorId, loginUser);
+    return this.patientsService.getAllPatients(loginUser);
   }
 
   @Get(':patientId')

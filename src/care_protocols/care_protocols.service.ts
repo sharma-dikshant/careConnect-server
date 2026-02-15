@@ -73,6 +73,8 @@ export class CareProtocolsService {
           HttpStatus.NOT_FOUND,
         );
       }
+
+      return new ApiResponseDto('success', protocols);
     } catch (error) {
       throw new HttpException(
         `Failed to found: ${error.message}`,

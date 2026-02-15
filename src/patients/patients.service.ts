@@ -65,9 +65,10 @@ export class PatientsService {
   }
 
   async getAllPatients(
-    doctorId: number,
     loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
+
+    const doctorId = loginUser.id;
     const doctor = await this.doctorRepository.findOne({
       where: { id: doctorId },
     });

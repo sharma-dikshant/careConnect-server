@@ -1,4 +1,5 @@
 import { Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -7,6 +8,7 @@ import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Controller('api/users')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT-auth')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

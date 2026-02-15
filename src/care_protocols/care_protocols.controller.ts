@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CareProtocolsService } from './care_protocols.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -20,6 +21,7 @@ import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Controller('api/care-protocols')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 export class CareProtocolsController {
   constructor(private readonly careProtocolsService: CareProtocolsService) {}
 
