@@ -155,15 +155,14 @@ export class AppointmentsService {
     });
 
     if (!appointment) {
-      throw new HttpException(
-        'Appointment not found',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException('Appointment not found', HttpStatus.NOT_FOUND);
     }
 
     // Verify user is either the doctor or patient
-    const isDoctor = loginUser.role === 'doctor' && appointment.doctor_id === loginUser.id;
-    const isPatient = loginUser.role === 'patient' && appointment.patient_id === loginUser.id;
+    const isDoctor =
+      loginUser.role === 'doctor' && appointment.doctor_id === loginUser.id;
+    const isPatient =
+      loginUser.role === 'patient' && appointment.patient_id === loginUser.id;
 
     if (!isDoctor && !isPatient) {
       throw new HttpException(
