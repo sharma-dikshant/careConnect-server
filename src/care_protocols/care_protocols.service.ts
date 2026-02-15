@@ -140,7 +140,7 @@ export class CareProtocolsService {
     }
 
     const filename = `${uuidv4()}_${file.originalname}`;
-    const s3Key = `uploads/locals/${appointmentId}/${filename}`;
+    const s3Key = `uploads/appointments/${appointment.doctor_id}/${appointment.patient_id}/${filename}`;
 
     try {
       const s3Url = await this.s3Service.uploadFile(
