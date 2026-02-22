@@ -18,14 +18,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install deps
-        run: npm install
+        run: npm ci
 
       - name: Build project
         run: npm run build
 
-      # Upload only dist + package.json
+      # Upload compiled build
       - name: Upload build to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -48,10 +49,11 @@ jobs:
             set -e
             cd /home/ubuntu/server/careConnect-server
 
-            echo "Installing production deps only..."
-            npm ci --omit=dev
+            echo "Installing production dependencies..."
+            npm ci --omit=dev --no-audit --no-fund
 
-            echo "Restarting PM2..."
-            pm2 restart careconnect || pm2 start dist/main.js --name careconnect
+            echo "Restarting backend..."
+            pm2 delete careconnect || true
+            pm2 start dist/main.js --name careconnect
 
             pm2 save
