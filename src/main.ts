@@ -6,13 +6,21 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   // Enable CORS
-  // app.enableCors({
-  //   origin: 'http://localhost:5173',
-  //   credentials: true,
-  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  //   allowedHeaders: ['Content-Type', 'Authorization'],
-  // });
+  app.enableCors({
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://13.232.144.165',
+      'http://13.232.144.165:3000',
+    ];
 
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+});
   const config = new DocumentBuilder()
     .setTitle('Care Connect')
     .setDescription('The API description')
@@ -43,7 +51,7 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
   console.log(
     `Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
   );
