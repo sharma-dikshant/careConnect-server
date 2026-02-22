@@ -6,12 +6,23 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   // Enable CORS
-  app.enableCors({
-  "origin": "*",
-  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-  "preflightContinue": false,
-  "optionsSuccessStatus": 204
-});
+  app.enableCors(app.enableCors({
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://13.232.144.165",
+      "http://13.232.144.165:3000",
+      "http://localhost:5173",
+      "http://65.2.29.66:3000"
+    ];
+
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
   const config = new DocumentBuilder()
     .setTitle('Care Connect')
     .setDescription('The API description')
