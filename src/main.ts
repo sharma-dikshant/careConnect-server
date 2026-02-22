@@ -7,19 +7,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   // Enable CORS
   app.enableCors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      'http://13.232.144.165',
-      'http://13.232.144.165:3000',
-    ];
-
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+  "origin": "*",
+  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+  "preflightContinue": false,
+  "optionsSuccessStatus": 204
 });
   const config = new DocumentBuilder()
     .setTitle('Care Connect')
