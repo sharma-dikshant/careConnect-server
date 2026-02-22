@@ -55,7 +55,7 @@ jobs:
             cd /home/ubuntu/server/careConnect-server
 
             echo "Installing production dependencies..."
-            npm ci --omit=dev --no-audit --no-fund
+            npm install --omit=dev --no-audit --no-fund
 
             echo "Restarting backend..."
             pm2 delete careconnect || true
