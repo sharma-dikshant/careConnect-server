@@ -25,6 +25,15 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Debug workspace
+        run: |
+          echo "Current path:"
+          pwd
+          echo "Files in root:"
+          ls -la
+          echo "Looking for dist:"
+          ls -la dist || echo "DIST NOT FOUND"
+
       # Upload compiled build
       - name: Upload build to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -32,10 +41,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          source: |
-            dist
-            package.json
-            package-lock.json
+          source: "dist/*"
           target: "/home/ubuntu/server/careConnect-server"
 
       - name: Restart backend
