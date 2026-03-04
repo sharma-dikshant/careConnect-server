@@ -68,8 +68,7 @@ export class CareProtocolsController {
   @Get('appointments/:appointmentId')
   @ApiOperation({
     summary: 'Get all care protocols for an appointment',
-    description:
-      `Returns both appointment-scoped protocols and all active global protocols of the appointment's doctor. Accessible by the appointment's doctor or patient.`,
+    description: `Returns both appointment-scoped protocols and all active global protocols of the appointment's doctor. Accessible by the appointment's doctor or patient.`,
   })
   async getAppointmentCareProtocols(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,

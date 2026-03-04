@@ -167,12 +167,17 @@ export class AccessTokenPayloadDto {
 }
 
 export class SearchUsersQueryDto {
-  @ApiPropertyOptional({ enum: ['doctor', 'patient'], description: 'Filter by user role' })
+  @ApiPropertyOptional({
+    enum: ['doctor', 'patient'],
+    description: 'Filter by user role',
+  })
   @IsEnum(['doctor', 'patient'])
   @IsOptional()
   role?: 'doctor' | 'patient';
 
-  @ApiPropertyOptional({ description: 'Partial, case-insensitive email search' })
+  @ApiPropertyOptional({
+    description: 'Partial, case-insensitive email search',
+  })
   @IsString()
   @IsOptional()
   email?: string;
@@ -184,7 +189,10 @@ export class SearchUsersQueryDto {
   @IsOptional()
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Items per page, max 100 (default: 10)', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Items per page, max 100 (default: 10)',
+    default: 10,
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)

@@ -7,7 +7,12 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -30,7 +35,9 @@ export class UsersController {
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Search users by role and/or email with pagination' })
+  @ApiOperation({
+    summary: 'Search users by role and/or email with pagination',
+  })
   @ApiQuery({ name: 'role', required: false, enum: ['doctor', 'patient'] })
   @ApiQuery({ name: 'email', required: false, type: String })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })

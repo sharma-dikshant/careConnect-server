@@ -53,7 +53,13 @@ export class CareProtocolsService {
       });
 
       await this.careProtocolRepository.save(newGlobalContext);
-      return new ApiResponseDto('success', { file: s3Url });
+
+      const downloadUrl = await this.s3Service.getPresignedUrl(s3Key);
+      return new ApiResponseDto('success', {
+        id: newGlobalContext.id,
+        file: s3Url,
+        download_url: downloadUrl,
+      });
     } catch (error) {
       throw new HttpException(
         `Failed to add global context: ${error.message}`,
@@ -212,7 +218,13 @@ export class CareProtocolsService {
       });
 
       await this.appointmentProtocolRepository.save(newLocalContext);
-      return new ApiResponseDto('success', { file: s3Url });
+
+      const downloadUrl = await this.s3Service.getPresignedUrl(s3Key);
+      return new ApiResponseDto('success', {
+        id: newLocalContext.id,
+        file: s3Url,
+        download_url: downloadUrl,
+      });
     } catch (error) {
       throw new HttpException(
         `Failed to add patient context: ${error.message}`,
@@ -282,8 +294,7 @@ export class CareProtocolsService {
       const isDoctor =
         loginUser.role === 'doctor' && appointment.doctor_id === loginUser.id;
       const isPatient =
-        loginUser.role === 'patient' &&
-        appointment.patient_id === loginUser.id;
+        loginUser.role === 'patient' && appointment.patient_id === loginUser.id;
 
       if (!isDoctor && !isPatient) {
         throw new HttpException(

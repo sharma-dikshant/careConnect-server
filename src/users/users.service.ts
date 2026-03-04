@@ -88,7 +88,16 @@ export class UsersService {
       const whereClause = emailCondition ? { email: emailCondition } : {};
       [doctors, doctorsTotal] = await this.doctorRepository.findAndCount({
         where: whereClause,
-        select: ['id', 'name', 'email', 'designation', 'specialization', 'hospital', 'active', 'created_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'designation',
+          'specialization',
+          'hospital',
+          'active',
+          'created_at',
+        ],
         ...(query.role === 'doctor' ? { skip, take: limit } : {}),
         order: { created_at: 'DESC' },
       });
