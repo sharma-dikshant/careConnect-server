@@ -60,8 +60,8 @@ export class MessagesService {
     try {
       const result = await axios.post(`${this.ragServerBaseUrl}/query`, {
         query: body.message,
-        patient_id: appointment.patient_id,
-        doctor_id: appointment.doctor_id,
+        patient_id: appointment.patient_id.toString(),
+        doctor_id: appointment.doctor_id.toString(),
       });
 
       botResp = result.data.answer as string;

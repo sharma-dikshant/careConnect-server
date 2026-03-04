@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsString,
@@ -6,7 +6,10 @@ import {
   IsInt,
   IsOptional,
   MinLength,
+  Min,
+  Max,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class LoginDto {
   @ApiProperty()
@@ -161,4 +164,31 @@ export class AccessTokenPayloadDto {
   @ApiProperty()
   @IsEmail()
   email: string;
+}
+
+export class SearchUsersQueryDto {
+  @ApiPropertyOptional({ enum: ['doctor', 'patient'], description: 'Filter by user role' })
+  @IsEnum(['doctor', 'patient'])
+  @IsOptional()
+  role?: 'doctor' | 'patient';
+
+  @ApiPropertyOptional({ description: 'Partial, case-insensitive email search' })
+  @IsString()
+  @IsOptional()
+  email?: string;
+
+  @ApiPropertyOptional({ description: 'Page number (default: 1)', default: 1 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number = 1;
+
+  @ApiPropertyOptional({ description: 'Items per page, max 100 (default: 10)', default: 10 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit?: number = 10;
 }

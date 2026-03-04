@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15
     container_name: careconnect-postgres
     restart: unless-stopped
     environment:
@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: care_connect
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -34,28 +34,8 @@ services:
       - "3000:3000"
     environment:
       # Database Configuration
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: care_connect
-
-      # JWT Configuration
-      JWT_SECRET: ${JWT_SECRET:-my_secret_key}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30m}
-
-      # Google AI Configuration
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-
-      # AWS S3 Configuration
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
-
-      # Server Configuration
-      PORT: 3000
-      NODE_ENV: development
+      env_file:
+        .env
     volumes:
       # Mount source code for hot reload in development
       - ./src:/app/src

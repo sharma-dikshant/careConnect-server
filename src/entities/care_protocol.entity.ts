@@ -19,6 +19,9 @@ export class CareProtocol {
   @Column({ length: 255, nullable: true })
   file: string;
 
+  @Column({ length: 512, nullable: true })
+  s3_key: string;
+
   @Column({ default: true })
   active: boolean;
 
