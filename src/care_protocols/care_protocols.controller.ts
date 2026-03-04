@@ -20,6 +20,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Controller('api/care-protocols')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -56,11 +57,15 @@ export class CareProtocolsController {
   // GET ROUTES
   @Roles('doctor')
   @Get('')
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   async getAllCareProtocolsByDoctorId(
+    @Query() pagination: PaginationDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ) {
+  ): Promise<ApiResponseDto> {
     return this.careProtocolsService.getAllCareProtocolsByDoctorId(
       loginUser.id,
+      pagination,
     );
   }
 
@@ -70,13 +75,17 @@ export class CareProtocolsController {
     summary: 'Get all care protocols for an appointment',
     description: `Returns both appointment-scoped protocols and all active global protocols of the appointment's doctor. Accessible by the appointment's doctor or patient.`,
   })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   async getAppointmentCareProtocols(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
+    @Query() pagination: PaginationDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
     return this.careProtocolsService.getAppointmentCareProtocols(
       appointmentId,
       loginUser,
+      pagination,
     );
   }
 

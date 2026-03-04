@@ -7,6 +7,7 @@ import { Appointment } from '../entities/appointment.entity';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { S3Service } from '../utils/s3.service';
+import { PaginationDto, paginate } from '../dto/pagination.dto';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -68,23 +69,29 @@ export class CareProtocolsService {
     }
   }
 
-  async getAllCareProtocolsByDoctorId(id: number) {
+  async getAllCareProtocolsByDoctorId(
+    id: number,
+    pagination: PaginationDto,
+  ): Promise<ApiResponseDto> {
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     try {
-      const protocols = await this.careProtocolRepository.find({
-        where: { doctor_id: id },
-      });
+      const [protocols, total] =
+        await this.careProtocolRepository.findAndCount({
+          where: { doctor_id: id, active: true },
+          order: { created_at: 'DESC' },
+          skip,
+          take: limit,
+        });
 
-      if (!protocols) {
-        throw new HttpException(
-          `No care protocols found`,
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      return new ApiResponseDto('success', protocols);
+      return new ApiResponseDto(
+        'success',
+        paginate(protocols, total, page, limit),
+      );
     } catch (error) {
       throw new HttpException(
-        `Failed to found: ${error.message}`,
+        `Failed to retrieve care protocols: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -125,8 +132,8 @@ export class CareProtocolsService {
   async getAppointmentCareProtocols(
     appointmentId: number,
     loginUser: AccessTokenPayloadDto,
+    pagination: PaginationDto,
   ): Promise<ApiResponseDto> {
-    // Load appointment to resolve doctor_id / patient_id for authz
     const appointment = await this.appointmentRepository.findOne({
       where: { id: appointmentId },
     });
@@ -138,7 +145,6 @@ export class CareProtocolsService {
       );
     }
 
-    // Only the appointment's doctor or patient may access these protocols
     const isDoctor =
       loginUser.role === 'doctor' && appointment.doctor_id === loginUser.id;
     const isPatient =
@@ -151,23 +157,35 @@ export class CareProtocolsService {
       );
     }
 
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     try {
-      // Fetch appointment-scoped protocols and the doctor's global protocols in parallel
-      const [appointmentProtocols, globalProtocols] = await Promise.all([
-        this.appointmentProtocolRepository.find({
-          where: { appointment_id: appointmentId, active: true },
-          order: { created_at: 'ASC' },
-        }),
-        this.careProtocolRepository.find({
-          where: { doctor_id: appointment.doctor_id, active: true },
-          order: { created_at: 'ASC' },
-        }),
-      ]);
+      const [[appointmentProtocols, apTotal], [globalProtocols, gpTotal]] =
+        await Promise.all([
+          this.appointmentProtocolRepository.findAndCount({
+            where: { appointment_id: appointmentId, active: true },
+            order: { created_at: 'ASC' },
+            skip,
+            take: limit,
+          }),
+          this.careProtocolRepository.findAndCount({
+            where: { doctor_id: appointment.doctor_id, active: true },
+            order: { created_at: 'ASC' },
+            skip,
+            take: limit,
+          }),
+        ]);
 
       return new ApiResponseDto('success', {
         appointment_id: appointmentId,
-        appointment_protocols: appointmentProtocols,
-        doctor_protocols: globalProtocols,
+        appointment_protocols: paginate(
+          appointmentProtocols,
+          apTotal,
+          page,
+          limit,
+        ),
+        doctor_protocols: paginate(globalProtocols, gpTotal, page, limit),
       });
     } catch (error) {
       throw new HttpException(

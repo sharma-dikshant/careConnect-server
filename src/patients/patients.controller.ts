@@ -7,10 +7,11 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -19,6 +20,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PatientCreateDto, PatientUpdateDto } from '../dto/patient.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Controller('api/patients')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -37,10 +39,13 @@ export class PatientsController {
 
   @Get('all')
   @Roles('doctor')
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   async getAllPatients(
+    @Query() pagination: PaginationDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.patientsService.getAllPatients(loginUser);
+    return this.patientsService.getAllPatients(loginUser, pagination);
   }
 
   @Get(':patientId')

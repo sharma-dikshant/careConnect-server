@@ -8,6 +8,7 @@ import { PatientCreateDto, PatientUpdateDto } from '../dto/patient.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { hashPassword } from '../utils/password.util';
+import { PaginationDto, paginate } from '../dto/pagination.dto';
 
 @Injectable()
 export class PatientsService {
@@ -66,6 +67,7 @@ export class PatientsService {
 
   async getAllPatients(
     loginUser: AccessTokenPayloadDto,
+    pagination: PaginationDto,
   ): Promise<ApiResponseDto> {
     const doctorId = loginUser.id;
     const doctor = await this.doctorRepository.findOne({
@@ -76,10 +78,17 @@ export class PatientsService {
       throw new HttpException('Doctor not found', HttpStatus.NOT_FOUND);
     }
 
-    const appointments = await this.appointmentRepository.find({
-      where: { doctor_id: doctorId, active: true },
-      relations: ['patient'],
-    });
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
+    const [appointments, total] =
+      await this.appointmentRepository.findAndCount({
+        where: { doctor_id: doctorId, active: true },
+        relations: ['patient'],
+        order: { created_at: 'DESC' },
+        skip,
+        take: limit,
+      });
 
     const patients = appointments.map((appointment) => ({
       id: appointment.patient.id,
@@ -99,7 +108,10 @@ export class PatientsService {
       appointmentId: appointment.id,
     }));
 
-    return new ApiResponseDto('Patients retrieved successfully', patients);
+    return new ApiResponseDto(
+      'Patients retrieved successfully',
+      paginate(patients, total, page, limit),
+    );
   }
 
   async getPatient(

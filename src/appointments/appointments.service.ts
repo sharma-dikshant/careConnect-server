@@ -8,6 +8,7 @@ import { Message } from '../entities/message.entity';
 import { AppointmentCreateDto } from '../dto/appointment.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
+import { PaginationDto, paginate } from '../dto/pagination.dto';
 
 @Injectable()
 export class AppointmentsService {
@@ -78,8 +79,8 @@ export class AppointmentsService {
   async getAppointments(
     type: 'doctor' | 'patient',
     loginUser: AccessTokenPayloadDto,
+    pagination: PaginationDto,
   ): Promise<ApiResponseDto> {
-    // Verify type matches user role
     if (type !== loginUser.role) {
       throw new HttpException(
         'Type parameter must match your user role',
@@ -87,15 +88,21 @@ export class AppointmentsService {
       );
     }
 
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     try {
       if (type === 'doctor') {
-        const appointments = await this.appointmentRepository.find({
-          where: { doctor_id: loginUser.id, active: true },
-          relations: ['patient'],
-          order: { created_at: 'DESC' },
-        });
+        const [appointments, total] =
+          await this.appointmentRepository.findAndCount({
+            where: { doctor_id: loginUser.id, active: true },
+            relations: ['patient'],
+            order: { created_at: 'DESC' },
+            skip,
+            take: limit,
+          });
 
-        const formattedAppointments = appointments.map((apt) => ({
+        const items = appointments.map((apt) => ({
           id: apt.id,
           title: apt.title,
           description: apt.description,
@@ -109,16 +116,19 @@ export class AppointmentsService {
 
         return new ApiResponseDto(
           'Appointments retrieved successfully',
-          formattedAppointments,
+          paginate(items, total, page, limit),
         );
       } else {
-        const appointments = await this.appointmentRepository.find({
-          where: { patient_id: loginUser.id, active: true },
-          relations: ['doctor'],
-          order: { created_at: 'DESC' },
-        });
+        const [appointments, total] =
+          await this.appointmentRepository.findAndCount({
+            where: { patient_id: loginUser.id, active: true },
+            relations: ['doctor'],
+            order: { created_at: 'DESC' },
+            skip,
+            take: limit,
+          });
 
-        const formattedAppointments = appointments.map((apt) => ({
+        const items = appointments.map((apt) => ({
           id: apt.id,
           title: apt.title,
           description: apt.description,
@@ -133,7 +143,7 @@ export class AppointmentsService {
 
         return new ApiResponseDto(
           'Appointments retrieved successfully',
-          formattedAppointments,
+          paginate(items, total, page, limit),
         );
       }
     } catch (error) {
@@ -147,8 +157,8 @@ export class AppointmentsService {
   async getAppointmentMessages(
     appointmentId: number,
     loginUser: AccessTokenPayloadDto,
+    pagination: PaginationDto,
   ): Promise<ApiResponseDto> {
-    // Find appointment and verify user is part of it
     const appointment = await this.appointmentRepository.findOne({
       where: { id: appointmentId },
       relations: ['patient', 'doctor'],
@@ -158,7 +168,6 @@ export class AppointmentsService {
       throw new HttpException('Appointment not found', HttpStatus.NOT_FOUND);
     }
 
-    // Verify user is either the doctor or patient
     const isDoctor =
       loginUser.role === 'doctor' && appointment.doctor_id === loginUser.id;
     const isPatient =
@@ -171,13 +180,21 @@ export class AppointmentsService {
       );
     }
 
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
     try {
-      const messages = await this.messageRepository.find({
+      const [messages, total] = await this.messageRepository.findAndCount({
         where: { appointment_id: appointmentId },
         order: { created_at: 'ASC' },
+        skip,
+        take: limit,
       });
 
-      return new ApiResponseDto('Messages retrieved successfully', messages);
+      return new ApiResponseDto(
+        'Messages retrieved successfully',
+        paginate(messages, total, page, limit),
+      );
     } catch (error) {
       throw new HttpException(
         'Failed to retrieve messages',
