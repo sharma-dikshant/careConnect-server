@@ -1,82 +1,102 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # PostgreSQL Database
+  # ---------- Backend DB ----------
   postgres:
     image: postgres:15
-    container_name: careconnect-postgres
-    restart: unless-stopped
+    container_name: backend-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: care_connect
+      POSTGRES_USER: ${DB_USERNAME:-dikshant}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-care_connect}
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - backend_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-dikshant} -d ${DB_NAME:-care_connect}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - careconnect-network
+      - dev-network
 
-  # NestJS Application
-  app:
+  # ---------- AI DB ----------
+  rag-db:
+    image: pgvector/pgvector:pg16
+    container_name: rag-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ragdb}
+    ports:
+      - "5436:5432"
+    volumes:
+      - rag_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-user}", "-d", "${POSTGRES_DB:-ragdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dev-network
+
+  # ---------- AI Server ----------
+  ai-server:
+    image: dikshant04/careconnect-ai:latest
+    container_name: dev-ai
+    ports:
+      - "8080:8000"
+    env_file:
+      - ../rag-server/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ragdb}
+      DATABASE_HOST: rag-db
+      DATABASE_PORT: 5432
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      - rag-db
+    networks:
+      - dev-network
+
+  # ---------- Backend (DEV MODE) ----------
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: development
-    container_name: careconnect-app
-    restart: unless-stopped
+    container_name: backend-dev
     ports:
       - "3000:3000"
-    environment:
-      # Database Configuration
-      env_file:
-        .env
     volumes:
-      # Mount source code for hot reload in development
-      - ./src:/app/src
-      - ./package.json:/app/package.json
-      - ./tsconfig.json:/app/tsconfig.json
-      - ./nest-cli.json:/app/nest-cli.json
-      # Prevent node_modules from being overwritten
+      - ./:/app:cached
       - /app/node_modules
+    env_file:
+      - ./.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-dikshant}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-care_connect}
+    command: npm run start:dev
     depends_on:
       postgres:
         condition: service_healthy
+      ai-server:
+        condition: service_started
     networks:
-      - careconnect-network
-    command: npm run start:dev
+      - dev-network
 
-  # pgAdmin (Optional - for database management)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: careconnect-pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@careconnect.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-    networks:
-      - careconnect-network
-    profiles:
-      - tools
-
+# ---------- Volumes ----------
 volumes:
-  postgres_data:
-    driver: local
-  pgadmin_data:
-    driver: local
+  backend_pg_data:
+  rag_pg_data:
 
+# ---------- Network ----------
 networks:
-  careconnect-network:
+  dev-network:
     driver: bridge
