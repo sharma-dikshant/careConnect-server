@@ -656,3 +656,265 @@ Get all messages for an appointment. Accessible by **both the doctor and patient
 |---|---|
 | `404` | `No appointment with id: {id}` |
 | `403` | `You do not have access to this appointment` |
+
+---
+
+## 5. Care Protocols 🔒
+
+> All routes require JWT. Files are uploaded as **`multipart/form-data`** with a field named `file`. Only **PDF** files are accepted.
+>
+> There are two types of protocols:
+> - **Global** (`care_protocols` table) — a doctor's personal library of PDFs, reusable across all appointments.
+> - **Appointment-scoped** (`appointment_protocols` table) — PDFs attached to a specific appointment, visible to both the doctor and patient.
+
+---
+
+### `POST /api/care-protocols`
+
+Upload a global care protocol PDF. **Doctor only.**
+
+**Request** — `multipart/form-data`
+
+| Field | Type | Required |
+|---|---|---|
+| `file` | PDF file | ✅ |
+
+**Success `200`**
+
+```json
+{
+  "message": "success",
+  "data": {
+    "id": 1,
+    "file": "https://s3.amazonaws.com/bucket/uploads/globals/1/uuid_file.pdf",
+    "download_url": "<presigned-s3-url>"
+  }
+}
+```
+
+**Errors**
+
+| Status | Message |
+|---|---|
+| `400` | `File type .{ext} not allowed.` |
+| `500` | `Failed to add global context: {reason}` |
+
+---
+
+### `GET /api/care-protocols`
+
+Get all global care protocols for the currently logged-in doctor. **Doctor only.**
+
+**Query Parameters**
+
+| Param | Type | Required | Default |
+|---|---|---|---|
+| `page` | number | ❌ | 1 |
+| `limit` | number | ❌ | 20 |
+
+**Success `200`**
+
+```json
+{
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "doctor_id": 1,
+        "file": "https://s3.amazonaws.com/...",
+        "s3_key": "uploads/globals/1/uuid_file.pdf",
+        "active": true,
+        "created_at": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "meta": {
+      "total": 3,
+      "page": 1,
+      "limit": 20,
+      "total_pages": 1
+    }
+  }
+}
+```
+
+**Errors**
+
+| Status | Message |
+|---|---|
+| `500` | `Failed to retrieve care protocols: {reason}` |
+
+---
+
+### `POST /api/care-protocols/locals/:appointmentId`
+
+Upload an appointment-scoped care protocol PDF. **Doctor only (must be the doctor of the appointment).**
+
+**Path Params:** `appointmentId` — integer
+
+**Request** — `multipart/form-data`
+
+| Field | Type | Required |
+|---|---|---|
+| `file` | PDF file | ✅ |
+
+**Success `200`**
+
+```json
+{
+  "message": "success",
+  "data": {
+    "id": 5,
+    "file": "https://s3.amazonaws.com/bucket/uploads/appointments/1/2/uuid_file.pdf",
+    "download_url": "<presigned-s3-url>"
+  }
+}
+```
+
+**Errors**
+
+| Status | Message |
+|---|---|
+| `404` | `you're not allow to add context to appointment id: {id}` |
+| `400` | `file type .{ext} is not allowed` |
+| `500` | `Failed to add patient context: {reason}` |
+
+---
+
+### `GET /api/care-protocols/appointments/:appointmentId`
+
+Get all care protocols for an appointment. Returns both the appointment-scoped protocols and all active global protocols of the appointment's doctor. Accessible by **the appointment's doctor or patient**.
+
+**Path Params:** `appointmentId` — integer
+
+**Query Parameters**
+
+| Param | Type | Required | Default |
+|---|---|---|---|
+| `page` | number | ❌ | 1 |
+| `limit` | number | ❌ | 20 |
+
+**Success `200`**
+
+```json
+{
+  "message": "success",
+  "data": {
+    "appointment_id": 1,
+    "appointment_protocols": {
+      "items": [
+        {
+          "id": 5,
+          "appointment_id": 1,
+          "file": "https://s3.amazonaws.com/...",
+          "s3_key": "uploads/appointments/1/2/uuid_file.pdf",
+          "active": true,
+          "created_at": "2024-01-01T00:00:00.000Z"
+        }
+      ],
+      "meta": { "total": 1, "page": 1, "limit": 20, "total_pages": 1 }
+    },
+    "doctor_protocols": {
+      "items": [
+        {
+          "id": 1,
+          "doctor_id": 1,
+          "file": "https://s3.amazonaws.com/...",
+          "s3_key": "uploads/globals/1/uuid_file.pdf",
+          "active": true,
+          "created_at": "2024-01-01T00:00:00.000Z"
+        }
+      ],
+      "meta": { "total": 3, "page": 1, "limit": 20, "total_pages": 1 }
+    }
+  }
+}
+```
+
+**Errors**
+
+| Status | Message |
+|---|---|
+| `404` | `No appointment found with id: {id}` |
+| `403` | `You are not authorized to view protocols for this appointment` |
+| `500` | `Failed to retrieve care protocols: {reason}` |
+
+---
+
+### `GET /api/care-protocols/:id/download`
+
+Get a presigned S3 download URL for a care protocol file.
+
+**Path Params:** `id` — integer (care protocol ID)
+
+**Query Parameters**
+
+| Param | Type | Required | Values |
+|---|---|---|---|
+| `type` | string | ✅ | `"global"` or `"appointment"` |
+
+**Access rules:**
+- `type=global` → only the owning doctor may download
+- `type=appointment` → the appointment's doctor or patient may download
+
+**Success `200`**
+
+```json
+{
+  "message": "success",
+  "data": {
+    "url": "<presigned-s3-url-valid-for-limited-time>"
+  }
+}
+```
+
+**Errors**
+
+| Status | Message |
+|---|---|
+| `400` | `Query param "type" is required and must be "global" or "appointment"` |
+| `404` | `No care protocol found with id: {id}` |
+| `404` | `No appointment care protocol found with id: {id}` |
+| `403` | `You are not authorized to download this care protocol` |
+| `500` | `S3 key not available for this care protocol` |
+| `500` | `Failed to generate download URL: {reason}` |
+
+---
+
+### `DELETE /api/care-protocols/appointments/:contextId`
+
+Soft-delete a care protocol (sets `active = false`). **Doctor only.**
+
+> **Note:** This route handles both global and appointment-scoped protocols. The server resolves which type to deactivate based on the ID.
+
+**Path Params:** `contextId` — integer
+
+**Success `200`**
+
+```json
+{
+  "message": "success",
+  "data": "inactive global context"
+}
+```
+
+or for appointment-scoped:
+
+```json
+{
+  "message": "success",
+  "data": "inactive local context"
+}
+```
+
+**Errors**
+
+| Status | Message |
+|---|---|
+| `404` | `no global context found with id: {id}` |
+| `404` | `no local context found with id: {id}` |
+| `401` | `global context {id} doesn't belongs to you` |
+| `401` | `local context {id} doesn't belongs to you` |
+| `500` | `failed to remove global context {id}` |
+| `500` | `failed to remove local context {id}` |
+
