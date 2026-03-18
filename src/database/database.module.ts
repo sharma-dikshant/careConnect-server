@@ -29,9 +29,9 @@ import { Message } from '../entities/message.entity';
         ],
         synchronize: true, // Set to false in production
         logging: false,
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        // ssl: {
+        //   rejectUnauthorized: false,
+        // },
       }),
       inject: [ConfigService],
     }),

@@ -35,7 +35,7 @@ export class MessagesController {
     return this.MessagesService.sendBotMessage(body, loginUser, appointmentId);
   }
 
-  @Get(':appointmentId')
+  @Get('/appointments/:appointmentId')
   async getMessages(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
   ) {

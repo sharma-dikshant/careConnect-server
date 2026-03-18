@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsString, IsOptional } from 'class-validator';
 
 export class AppointmentCreateDto {
@@ -11,6 +11,18 @@ export class AppointmentCreateDto {
   title: string;
 
   @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  description?: string;
+}
+
+export class AppointmentUpdateDto {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   description?: string;

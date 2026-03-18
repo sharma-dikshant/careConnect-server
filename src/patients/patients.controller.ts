@@ -28,64 +28,56 @@ import { PaginationDto } from '../dto/pagination.dto';
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
-  @Post()
-  @Roles('doctor')
-  async addPatient(
-    @Body() body: PatientCreateDto,
-    @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ): Promise<ApiResponseDto> {
-    return this.patientsService.addPatient(body, loginUser);
-  }
 
-  @Get('all')
-  @Roles('doctor')
-  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
-  async getAllPatients(
-    @Query() pagination: PaginationDto,
-    @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ): Promise<ApiResponseDto> {
-    return this.patientsService.getAllPatients(loginUser, pagination);
-  }
+  // @Get('all')
+  // @Roles('doctor')
+  // @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  // @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  // async getAllPatients(
+  //   @Query() pagination: PaginationDto,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.patientsService.getAllPatients(loginUser, pagination);
+  // }
 
-  @Get(':patientId')
-  @Roles('doctor')
-  async getPatient(
-    @Param('patientId', ParseIntPipe) patientId: number,
-    @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ): Promise<ApiResponseDto> {
-    return this.patientsService.getPatient(patientId, loginUser);
-  }
+  // @Get(':patientId')
+  // @Roles('doctor')
+  // async getPatient(
+  //   @Param('patientId', ParseIntPipe) patientId: number,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.patientsService.getPatient(patientId, loginUser);
+  // }
 
-  @Put(':patientId')
-  @Roles('doctor')
-  async updatePatient(
-    @Param('patientId', ParseIntPipe) patientId: number,
-    @Body() patientData: PatientUpdateDto,
-    @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ): Promise<ApiResponseDto> {
-    return this.patientsService.updatePatient(
-      patientId,
-      patientData,
-      loginUser,
-    );
-  }
+  // @Put(':patientId')
+  // @Roles('doctor')
+  // async updatePatient(
+  //   @Param('patientId', ParseIntPipe) patientId: number,
+  //   @Body() patientData: PatientUpdateDto,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.patientsService.updatePatient(
+  //     patientId,
+  //     patientData,
+  //     loginUser,
+  //   );
+  // }
 
-  @Delete(':patientId')
-  @Roles('doctor')
-  async deletePatient(
-    @Param('patientId', ParseIntPipe) patientId: number,
-    @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ): Promise<ApiResponseDto> {
-    return this.patientsService.deletePatient(patientId, loginUser);
-  }
+  // @Delete(':patientId')
+  // @Roles('doctor')
+  // async deletePatient(
+  //   @Param('patientId', ParseIntPipe) patientId: number,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.patientsService.deletePatient(patientId, loginUser);
+  // }
 
-  @Patch('inactive/:patientId')
-  @Roles('doctor')
-  async inactivePatient(
-    @Param('patientId', ParseIntPipe) patientId: number,
-    @CurrentUser() loginUser: AccessTokenPayloadDto,
-  ): Promise<ApiResponseDto> {
-    return this.patientsService.inactivePatient(patientId, loginUser);
-  }
+  // @Patch('inactive/:patientId')
+  // @Roles('doctor')
+  // async inactivePatient(
+  //   @Param('patientId', ParseIntPipe) patientId: number,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.patientsService.inactivePatient(patientId, loginUser);
+  // }
 }

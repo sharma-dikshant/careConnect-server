@@ -200,3 +200,58 @@ export class SearchUsersQueryDto {
   @IsOptional()
   limit?: number = 10;
 }
+
+export class UpdateDoctorProfileDto {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  designation?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  license?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  specialization?: string;
+
+  @ApiPropertyOptional()
+  @IsInt()
+  @IsOptional()
+  experience?: number;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  bio?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  hospital?: string;
+}
+
+export class UpdatePatientProfileDto {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  name?: string;
+}
+

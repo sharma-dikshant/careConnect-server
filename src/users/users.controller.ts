@@ -1,6 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Patch,
   Query,
   UseGuards,
@@ -9,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -16,7 +20,7 @@ import {
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AccessTokenPayloadDto, SearchUsersQueryDto } from '../dto/auth.dto';
+import { AccessTokenPayloadDto, SearchUsersQueryDto, UpdateDoctorProfileDto, UpdatePatientProfileDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 
 @ApiTags('Users')
@@ -49,11 +53,59 @@ export class UsersController {
     return this.usersService.searchUsers(query);
   }
 
-  @Patch()
-  @ApiOperation({ summary: 'Update current user profile' })
-  async updateProfile(
+  @Get('doctors/:doctorId')
+  @ApiOperation({ summary: 'Get a doctor profile by ID' })
+  async getDoctor(
+    @Param('doctorId', ParseIntPipe) doctorId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.usersService.updateProfile(loginUser);
+    return this.usersService.getDoctor(doctorId, loginUser);
+  }
+
+  @Get('patients/:patientId')
+  @ApiOperation({ summary: 'Get a patient profile by ID' })
+  async getPatient(
+    @Param('patientId', ParseIntPipe) patientId: number,
+    @CurrentUser() loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    return this.usersService.getPatient(patientId, loginUser);
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiBody({
+    description:
+      'Fields to update. Doctors can update all doctor-specific fields; patients can only update name.',
+    schema: {
+      oneOf: [
+        {
+          title: 'UpdateDoctorProfileDto',
+          properties: {
+            name: { type: 'string' },
+            phone: { type: 'string' },
+            address: { type: 'string' },
+            designation: { type: 'string' },
+            license: { type: 'string' },
+            specialization: { type: 'string' },
+            experience: { type: 'integer' },
+            bio: { type: 'string' },
+            hospital: { type: 'string' },
+          },
+        },
+        {
+          title: 'UpdatePatientProfileDto',
+          properties: {
+            name: { type: 'string' },
+          },
+        },
+      ],
+    },
+  })
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async updateProfile(
+    @CurrentUser() loginUser: AccessTokenPayloadDto,
+    @Body() updateDto: UpdateDoctorProfileDto | UpdatePatientProfileDto,
+  ): Promise<ApiResponseDto> {
+    return this.usersService.updateProfile(loginUser, updateDto);
   }
 }

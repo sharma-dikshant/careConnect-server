@@ -81,14 +81,15 @@ export class PatientsService {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
 
-    const [appointments, total] =
-      await this.appointmentRepository.findAndCount({
+    const [appointments, total] = await this.appointmentRepository.findAndCount(
+      {
         where: { doctor_id: doctorId, active: true },
         relations: ['patient'],
         order: { created_at: 'DESC' },
         skip,
         take: limit,
-      });
+      },
+    );
 
     const patients = appointments.map((appointment) => ({
       id: appointment.patient.id,

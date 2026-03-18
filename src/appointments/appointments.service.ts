@@ -5,7 +5,7 @@ import { Appointment } from '../entities/appointment.entity';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import { Message } from '../entities/message.entity';
-import { AppointmentCreateDto } from '../dto/appointment.dto';
+import { AppointmentCreateDto, AppointmentUpdateDto } from '../dto/appointment.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto, paginate } from '../dto/pagination.dto';
@@ -76,23 +76,77 @@ export class AppointmentsService {
     }
   }
 
-  async getAppointments(
-    type: 'doctor' | 'patient',
+  async updateAppointment(
+    appointmentId: number,
+    data: AppointmentUpdateDto,
     loginUser: AccessTokenPayloadDto,
-    pagination: PaginationDto,
   ): Promise<ApiResponseDto> {
-    if (type !== loginUser.role) {
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id: appointmentId },
+      relations: ['patient'],
+    });
+
+    if (!appointment) {
+      throw new HttpException('Appointment not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (appointment.doctor_id !== loginUser.id) {
       throw new HttpException(
-        'Type parameter must match your user role',
+        'You are not the doctor for this appointment',
         HttpStatus.FORBIDDEN,
       );
     }
 
+    Object.assign(appointment, data);
+    const updated = await this.appointmentRepository.save(appointment);
+
+    return new ApiResponseDto('Appointment updated successfully', {
+      id: updated.id,
+      title: updated.title,
+      description: updated.description,
+      patient: {
+        id: appointment.patient.id,
+        name: appointment.patient.name,
+        email: appointment.patient.email,
+      },
+      created_at: updated.created_at,
+    });
+  }
+
+  async deleteAppointment(
+    appointmentId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id: appointmentId },
+    });
+
+    if (!appointment) {
+      throw new HttpException('Appointment not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (appointment.doctor_id !== loginUser.id) {
+      throw new HttpException(
+        'You are not the doctor for this appointment',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    appointment.active = false;
+    await this.appointmentRepository.save(appointment);
+
+    return new ApiResponseDto('Appointment deleted successfully');
+  }
+
+  async getAppointments(
+    loginUser: AccessTokenPayloadDto,
+    pagination: PaginationDto,
+  ): Promise<ApiResponseDto> {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
 
     try {
-      if (type === 'doctor') {
+      if (loginUser.role === 'doctor') {
         const [appointments, total] =
           await this.appointmentRepository.findAndCount({
             where: { doctor_id: loginUser.id, active: true },

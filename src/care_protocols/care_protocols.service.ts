@@ -77,13 +77,14 @@ export class CareProtocolsService {
     const skip = (page - 1) * limit;
 
     try {
-      const [protocols, total] =
-        await this.careProtocolRepository.findAndCount({
+      const [protocols, total] = await this.careProtocolRepository.findAndCount(
+        {
           where: { doctor_id: id, active: true },
           order: { created_at: 'DESC' },
           skip,
           take: limit,
-        });
+        },
+      );
 
       return new ApiResponseDto(
         'success',

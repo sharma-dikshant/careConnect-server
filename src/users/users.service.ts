@@ -3,9 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
-import { AccessTokenPayloadDto } from '../dto/auth.dto';
-import { SearchUsersQueryDto } from '../dto/auth.dto';
+import {
+  AccessTokenPayloadDto,
+  SearchUsersQueryDto,
+  UpdateDoctorProfileDto,
+  UpdatePatientProfileDto,
+} from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
+
 
 @Injectable()
 export class UsersService {
@@ -68,8 +73,75 @@ export class UsersService {
 
   async updateProfile(
     loginUser: AccessTokenPayloadDto,
+    updateDto: UpdateDoctorProfileDto | UpdatePatientProfileDto,
   ): Promise<ApiResponseDto> {
-    return new ApiResponseDto('success', 'update profile');
+    if (loginUser.role === 'doctor') {
+      const doctor = await this.doctorRepository.findOne({
+        where: { id: loginUser.id },
+      });
+
+      if (!doctor) {
+        return new ApiResponseDto('Doctor not found', null);
+      }
+
+      const dto = updateDto as UpdateDoctorProfileDto;
+      Object.assign(doctor, dto);
+      const updated = await this.doctorRepository.save(doctor);
+
+      const { password, ...doctorData } = updated;
+      return new ApiResponseDto('Profile updated successfully', doctorData);
+    } else if (loginUser.role === 'patient') {
+      const patient = await this.patientRepository.findOne({
+        where: { id: loginUser.id },
+      });
+
+      if (!patient) {
+        return new ApiResponseDto('Patient not found', null);
+      }
+
+      const dto = updateDto as UpdatePatientProfileDto;
+      Object.assign(patient, dto);
+      const updated = await this.patientRepository.save(patient);
+
+      const { password, ...patientData } = updated;
+      return new ApiResponseDto('Profile updated successfully', patientData);
+    }
+
+    return new ApiResponseDto('Invalid user role', null);
+  }
+
+  async getDoctor(
+    doctorId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: doctorId },
+    });
+
+    if (!doctor) {
+      return new ApiResponseDto('Doctor not found', null);
+    }
+
+    const { password, ...doctorData } = doctor;
+
+    return new ApiResponseDto('Doctor fetched successfully', doctorData);
+  }
+
+  async getPatient(
+    patientId: number,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
+
+    if (!patient) {
+      return new ApiResponseDto('Patient not found', null);
+    }
+
+    const { password, ...patientData } = patient;
+
+    return new ApiResponseDto('Patient fetched successfully', patientData);
   }
 
   async searchUsers(query: SearchUsersQueryDto): Promise<ApiResponseDto> {
