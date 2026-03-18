@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # Backend DB (Postgres)
+  # ---------- Backend DB ----------
   postgres:
     image: postgres:15
     container_name: cc-postgres
@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-care_connect}
     ports:
-      - "5434:5432"            # host:container
+      - "5434:5432"
     volumes:
       - backend_db:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     networks:
       - cc-network
 
-  # RAG DB (pgvector)
+  # ---------- AI DB ----------
   rag-db:
     image: pgvector/pgvector:pg16
     container_name: cc-rag-db
@@ -43,7 +43,7 @@ services:
     networks:
       - cc-network
 
-  # Backend (production image)
+  # ---------- Backend ----------
   backend:
     image: dikshant04/careconnect-backend:latest
     container_name: cc-backend
@@ -53,19 +53,19 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      # override DB host so container talks to postgres service
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME:-dikshant}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-care_connect}
-      # keep other envs sourced from ./backend/.env (JWT, AWS, BOT_SERVER_BASE_URL, ...)
+      BOT_SERVER_BASE_URL: http://ai-server:8000
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - cc-network
 
-  # AI Server (production image)
+  # ---------- AI Server ----------
   ai-server:
     image: dikshant04/careconnect-ai:latest
     container_name: cc-ai
@@ -78,18 +78,19 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-ragdb}
-      DATABASE_HOST: ${DATABASE_HOST:-rag-db}
-      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_HOST: rag-db
+      DATABASE_PORT: 5432
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     depends_on:
-      - rag-db
+      rag-db:
+        condition: service_healthy
     networks:
       - cc-network
 
-  # Frontend (production image)
+  # ---------- Frontend ----------
   frontend:
     image: dikshant04/careconnect-frontend:latest
     container_name: cc-frontend
@@ -105,10 +106,12 @@ services:
     networks:
       - cc-network
 
+# ---------- Volumes ----------
 volumes:
   backend_db:
   rag_db:
 
+# ---------- Network ----------
 networks:
   cc-network:
     driver: bridge
