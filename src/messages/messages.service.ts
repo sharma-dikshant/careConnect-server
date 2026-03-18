@@ -7,6 +7,7 @@ import { Appointment } from '../entities/appointment.entity';
 import { MessageCreateDto } from '../dto/message.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
+import { PaginationDto, paginate } from '../dto/pagination.dto';
 import axios from 'axios';
 
 @Injectable()
@@ -22,6 +23,50 @@ export class MessagesService {
   ) {
     this.ragServerBaseUrl = this.configService.getOrThrow<string>(
       'BOT_SERVER_BASE_URL',
+    );
+  }
+
+  async getMessages(
+    appointmentId: number,
+    loginUser: AccessTokenPayloadDto,
+    pagination: PaginationDto,
+  ): Promise<ApiResponseDto> {
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id: appointmentId },
+    });
+
+    if (!appointment) {
+      throw new HttpException(
+        `No appointment with id: ${appointmentId}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const isDoctor =
+      loginUser.role === 'doctor' && appointment.doctor_id === loginUser.id;
+    const isPatient =
+      loginUser.role === 'patient' && appointment.patient_id === loginUser.id;
+
+    if (!isDoctor && !isPatient) {
+      throw new HttpException(
+        'You do not have access to this appointment',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+
+    const [messages, total] = await this.messageRepository.findAndCount({
+      where: { appointment_id: appointmentId },
+      order: { created_at: 'ASC' },
+      skip,
+      take: limit,
+    });
+
+    return new ApiResponseDto(
+      'Messages retrieved successfully',
+      paginate(messages, total, page, limit),
     );
   }
 

@@ -254,4 +254,3 @@ export class UpdatePatientProfileDto {
   @IsOptional()
   name?: string;
 }
-

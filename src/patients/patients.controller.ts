@@ -28,7 +28,6 @@ import { PaginationDto } from '../dto/pagination.dto';
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
-
   // @Get('all')
   // @Roles('doctor')
   // @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })

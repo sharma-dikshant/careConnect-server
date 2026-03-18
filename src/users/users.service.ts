@@ -11,7 +11,6 @@ import {
 } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 
-
 @Injectable()
 export class UsersService {
   constructor(

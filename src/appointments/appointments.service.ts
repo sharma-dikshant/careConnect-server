@@ -5,7 +5,10 @@ import { Appointment } from '../entities/appointment.entity';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import { Message } from '../entities/message.entity';
-import { AppointmentCreateDto, AppointmentUpdateDto } from '../dto/appointment.dto';
+import {
+  AppointmentCreateDto,
+  AppointmentUpdateDto,
+} from '../dto/appointment.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto, paginate } from '../dto/pagination.dto';

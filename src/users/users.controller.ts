@@ -20,7 +20,12 @@ import {
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AccessTokenPayloadDto, SearchUsersQueryDto, UpdateDoctorProfileDto, UpdatePatientProfileDto } from '../dto/auth.dto';
+import {
+  AccessTokenPayloadDto,
+  SearchUsersQueryDto,
+  UpdateDoctorProfileDto,
+  UpdatePatientProfileDto,
+} from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 
 @ApiTags('Users')

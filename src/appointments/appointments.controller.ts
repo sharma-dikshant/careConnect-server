@@ -18,7 +18,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { AppointmentCreateDto, AppointmentUpdateDto } from '../dto/appointment.dto';
+import {
+  AppointmentCreateDto,
+  AppointmentUpdateDto,
+} from '../dto/appointment.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto } from '../dto/pagination.dto';
@@ -50,16 +53,21 @@ export class AppointmentsController {
 
   @Patch(':appointmentId')
   @Roles('doctor')
-  @ApiOperation({ summary: 'Update appointment title/description (doctor only)' })
+  @ApiOperation({
+    summary: 'Update appointment title/description (doctor only)',
+  })
   @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   async updateAppointment(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
     @Body() body: AppointmentUpdateDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.appointmentsService.updateAppointment(appointmentId, body, loginUser);
+    return this.appointmentsService.updateAppointment(
+      appointmentId,
+      body,
+      loginUser,
+    );
   }
-
 
   @Delete(':appointmentId')
   @Roles('doctor')
