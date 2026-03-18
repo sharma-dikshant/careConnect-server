@@ -1,56 +1,33 @@
-# Development stage
-FROM node:20-alpine AS development
-
+# ---------- Base ----------
+FROM node:20-alpine AS base
 WORKDIR /app
 
-# Copy package files
+# ---------- Dependencies ----------
+FROM base AS deps
 COPY package*.json ./
-
-# Install dependencies
 RUN npm i
 
-# Copy source code
+# ---------- Build ----------
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Expose port
-EXPOSE 3000
-
-# Start development server
-CMD ["npm", "run", "start:dev"]
-
-# Production build stage
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
-COPY . .
-
-# Build the application
 RUN npm run build
 
-# Production stage
+# ---------- Production ----------
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy package files
+# Install only production deps
 COPY package*.json ./
+RUN npm i
 
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy built application from build stage
+# Copy built files
 COPY --from=build /app/dist ./dist
 
-# Expose port
+# Optional: copy prisma/schema if needed
+# COPY --from=build /app/prisma ./prisma
+
 EXPOSE 3000
 
-# Start production server
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]
