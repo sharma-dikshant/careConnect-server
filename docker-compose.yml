@@ -48,7 +48,7 @@ services:
     ports:
       - "8080:8000"
     env_file:
-      - ../rag-server/.env
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -75,7 +75,7 @@ services:
       - ./:/app:cached
       - /app/node_modules
     env_file:
-      - ./.env
+      - .env
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -88,6 +88,22 @@ services:
         condition: service_healthy
       ai-server:
         condition: service_started
+    networks:
+      - dev-network
+
+# ------- Frontend ------------
+  frontend:
+    image: dikshant04/careconnect-frontend:latest
+    container_name: cc-frontend
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    env_file:
+      - .env
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://backend:3000}
+    depends_on:
+      - backend
     networks:
       - dev-network
 
