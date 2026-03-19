@@ -16,7 +16,7 @@ async function bootstrap() {
         'http://65.2.29.66:3000',
         'http://localhost:3000',
         'https://pamela-xylic-na.ngrok-free.dev',
-        'http://localhost:5174'
+        'http://localhost:5174',
       ];
 
       if (!origin || allowed.includes(origin)) {
