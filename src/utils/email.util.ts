@@ -25,13 +25,13 @@ class Email {
     });
   }
 
-  async send(to: string, subject: string, message: string): Promise<void> {
+  async send(to: string, subject: string, html: string): Promise<void> {
     try {
       await this.transporter.sendMail({
         from: process.env.SMTP_USER,
         to,
         subject,
-        text: message,
+        html,
       });
     } catch (err) {
       console.error('Email failed:', err);

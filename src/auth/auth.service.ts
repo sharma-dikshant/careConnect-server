@@ -103,21 +103,6 @@ export class AuthService {
         OTP_TYPE.SIGNUP_DOCTOR,
         doctor,
       );
-      // // Sending Email
-      // emailUtility
-      //   .send(
-      //     doctor.email,
-      //     'Welcome to Care Connect!',
-      //     `Hi Dr. ${doctor.name} \n Welcome to care connect. Get started with Guide`,
-      //   )
-      //   .then(() => {
-      //     console.log(`welcome email sent to ${doctor.email}`);
-      //   })
-      //   .catch((error) => {
-      //     console.log(
-      //       `failed to send welcome email to ${doctor.email}. Error: $${error}`,
-      //     );
-      //   });
 
       return new ApiResponseDto('otp send successfully');
     } catch (error) {
@@ -136,21 +121,6 @@ export class AuthService {
         OTP_TYPE.SIGNUP_PATIENT,
         patient,
       );
-      // Sending Email
-      // emailUtility
-      //   .send(
-      //     patient.email,
-      //     'Welcome to Care Connect!',
-      //     `Hi Dr. ${patient.name} \n Welcome to care connect. Get started with Guide`,
-      //   )
-      //   .then(() => {
-      //     console.log(`welcome email sent to ${patient.email}`);
-      //   })
-      //   .catch((error) => {
-      //     console.log(
-      //       `failed to send welcome email to ${patient.email}. Error: $${error}`,
-      //     );
-      //   });
 
       return new ApiResponseDto('otp send successfully');
     } catch (error) {
