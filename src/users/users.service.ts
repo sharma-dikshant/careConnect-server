@@ -1,24 +1,56 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import {
   AccessTokenPayloadDto,
+  DoctorSignupDto,
   SearchUsersQueryDto,
   UpdateDoctorProfileDto,
   UpdatePatientProfileDto,
 } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
+import { hashPassword } from 'src/utils/password.util';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Doctor)
-    private doctorRepository: Repository<Doctor>,
+    private readonly doctorRepository: Repository<Doctor>,
     @InjectRepository(Patient)
-    private patientRepository: Repository<Patient>,
+    private readonly patientRepository: Repository<Patient>,
   ) {}
+
+  async addDoctor(doctor: DoctorSignupDto) {
+    const existing = await this.doctorRepository.findOne({
+      where: [{ email: doctor.email }, { phone: doctor.phone }],
+    });
+
+    if (existing) {
+      throw new HttpException(
+        'user with this email or phone already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const hashedPassword = await hashPassword(doctor.password);
+    const newDoctor = this.doctorRepository.create({
+      name: doctor.name,
+      email: doctor.email,
+      password: hashedPassword,
+      phone: doctor.phone,
+      address: doctor.address || '',
+      designation: doctor.designation || '',
+      license: doctor.license || '',
+      specialization: doctor.specialization || '',
+      experience: doctor.experience || 0,
+      bio: doctor.bio || '',
+      hospital: doctor.hospital || '',
+    });
+
+    await this.doctorRepository.save(newDoctor);
+  }
 
   async getProfile(loginUser: AccessTokenPayloadDto): Promise<ApiResponseDto> {
     if (loginUser.role === 'doctor') {

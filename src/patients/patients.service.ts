@@ -14,11 +14,11 @@ import { PaginationDto, paginate } from '../dto/pagination.dto';
 export class PatientsService {
   constructor(
     @InjectRepository(Patient)
-    private patientRepository: Repository<Patient>,
+    private readonly patientRepository: Repository<Patient>,
     @InjectRepository(Appointment)
-    private appointmentRepository: Repository<Appointment>,
+    private readonly appointmentRepository: Repository<Appointment>,
     @InjectRepository(Doctor)
-    private doctorRepository: Repository<Doctor>,
+    private readonly doctorRepository: Repository<Doctor>,
   ) {}
 
   async addPatient(

@@ -8,20 +8,23 @@ import {
   LoginDto,
   DoctorSignupDto,
   PatientSignupDto,
-  SignupDto,
   AccessTokenPayloadDto,
 } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
-import { hashPassword, verifyPassword } from '../utils/password.util';
+import { verifyPassword } from '../utils/password.util';
+import { OtpService } from 'src/otp/otp.service';
+import emailUtility from 'src/utils/email.util';
+import { OTP_TYPE } from 'src/constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Doctor)
-    private doctorRepository: Repository<Doctor>,
+    private readonly doctorRepository: Repository<Doctor>,
     @InjectRepository(Patient)
-    private patientRepository: Repository<Patient>,
-    private jwtService: JwtService,
+    private readonly patientRepository: Repository<Patient>,
+    private readonly jwtService: JwtService,
+    private readonly otpService: OtpService,
   ) {}
 
   async login(data: LoginDto): Promise<ApiResponseDto> {
@@ -93,44 +96,30 @@ export class AuthService {
   }
 
   async signupDoctor(doctor: DoctorSignupDto): Promise<ApiResponseDto> {
-    const existing = await this.doctorRepository.findOne({
-      where: [{ email: doctor.email }, { phone: doctor.phone }],
-    });
-
-    if (existing) {
-      throw new HttpException(
-        'user with this email or phone already exists',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     try {
-      const hashedPassword = await hashPassword(doctor.password);
-      const newDoctor = this.doctorRepository.create({
-        name: doctor.name,
-        email: doctor.email,
-        password: hashedPassword,
-        phone: doctor.phone,
-        address: doctor.address || '',
-        designation: doctor.designation || '',
-        license: doctor.license || '',
-        specialization: doctor.specialization || '',
-        experience: doctor.experience || 0,
-        bio: doctor.bio || '',
-        hospital: doctor.hospital || '',
-      });
+      // send otp
+      await this.otpService.sendOtp(
+        doctor.email,
+        OTP_TYPE.SIGNUP_DOCTOR,
+        doctor,
+      );
+      // // Sending Email
+      // emailUtility
+      //   .send(
+      //     doctor.email,
+      //     'Welcome to Care Connect!',
+      //     `Hi Dr. ${doctor.name} \n Welcome to care connect. Get started with Guide`,
+      //   )
+      //   .then(() => {
+      //     console.log(`welcome email sent to ${doctor.email}`);
+      //   })
+      //   .catch((error) => {
+      //     console.log(
+      //       `failed to send welcome email to ${doctor.email}. Error: $${error}`,
+      //     );
+      //   });
 
-      await this.doctorRepository.save(newDoctor);
-
-      const payload: AccessTokenPayloadDto = {
-        id: newDoctor.id,
-        role: 'doctor',
-        name: newDoctor.name,
-        email: newDoctor.email,
-      };
-
-      const token = this.jwtService.sign(payload);
-      return new ApiResponseDto('signed up', { token, type: 'Bearer' });
+      return new ApiResponseDto('otp send successfully');
     } catch (error) {
       throw new HttpException(
         'failed to create account',
@@ -140,36 +129,30 @@ export class AuthService {
   }
 
   async signupPatient(patient: PatientSignupDto): Promise<ApiResponseDto> {
-    const existing = await this.patientRepository.findOne({
-      where: { email: patient.email },
-    });
-
-    if (existing) {
-      throw new HttpException(
-        'user with this email already exists',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     try {
-      const hashedPassword = await hashPassword(patient.password);
-      const newPatient = this.patientRepository.create({
-        name: patient.name,
-        email: patient.email,
-        password: hashedPassword,
-      });
+      // send otp
+      await this.otpService.sendOtp(
+        patient.email,
+        OTP_TYPE.SIGNUP_PATIENT,
+        patient,
+      );
+      // Sending Email
+      // emailUtility
+      //   .send(
+      //     patient.email,
+      //     'Welcome to Care Connect!',
+      //     `Hi Dr. ${patient.name} \n Welcome to care connect. Get started with Guide`,
+      //   )
+      //   .then(() => {
+      //     console.log(`welcome email sent to ${patient.email}`);
+      //   })
+      //   .catch((error) => {
+      //     console.log(
+      //       `failed to send welcome email to ${patient.email}. Error: $${error}`,
+      //     );
+      //   });
 
-      await this.patientRepository.save(newPatient);
-
-      const payload: AccessTokenPayloadDto = {
-        id: newPatient.id,
-        role: 'patient',
-        name: newPatient.name,
-        email: newPatient.email,
-      };
-
-      const token = this.jwtService.sign(payload);
-      return new ApiResponseDto('signed up', { token, type: 'Bearer' });
+      return new ApiResponseDto('otp send successfully');
     } catch (error) {
       throw new HttpException(
         'failed to create account',
