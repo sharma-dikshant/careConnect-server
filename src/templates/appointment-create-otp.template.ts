@@ -1,4 +1,7 @@
-export function appointmentCreateOtpTemplate(name: string, otp: string): string {
+export function appointmentCreateOtpTemplate(
+  name: string,
+  otp: string,
+): string {
   return `
 <!DOCTYPE html>
 <html lang="en">

@@ -1,4 +1,7 @@
-export function welcomeTemplate(name: string, role: 'doctor' | 'patient'): string {
+export function welcomeTemplate(
+  name: string,
+  role: 'doctor' | 'patient',
+): string {
   const greeting = role === 'doctor' ? `Dr. ${name}` : name;
   const roleMessage =
     role === 'doctor'
