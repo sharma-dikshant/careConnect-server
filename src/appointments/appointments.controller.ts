@@ -48,12 +48,11 @@ export class AppointmentsController {
   async getAppointments(
     @Query() pagination: PaginationDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
-    @Query() active: 'true' | 'false',
   ): Promise<ApiResponseDto> {
     return this.appointmentsService.getAppointments(
       loginUser,
       pagination,
-      active,
+      pagination.active,
     );
   }
 
