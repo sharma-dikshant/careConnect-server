@@ -10,6 +10,8 @@ import { CareProtocolsModule } from './care_protocols/care_protocols.module';
 import { MessagesModule } from './messages/messages.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { S3Module } from './utils/s3.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { S3Module } from './utils/s3.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    CacheModule.register({ isGlobal: true }),
     DatabaseModule,
     S3Module,
     AuthModule,
@@ -25,6 +28,7 @@ import { S3Module } from './utils/s3.module';
     CareProtocolsModule,
     MessagesModule,
     AppointmentsModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [AppService],

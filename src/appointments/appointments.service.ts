@@ -17,13 +17,13 @@ import { PaginationDto, paginate } from '../dto/pagination.dto';
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment)
-    private appointmentRepository: Repository<Appointment>,
+    private readonly appointmentRepository: Repository<Appointment>,
     @InjectRepository(Doctor)
-    private doctorRepository: Repository<Doctor>,
+    private readonly doctorRepository: Repository<Doctor>,
     @InjectRepository(Patient)
-    private patientRepository: Repository<Patient>,
+    private readonly patientRepository: Repository<Patient>,
     @InjectRepository(Message)
-    private messageRepository: Repository<Message>,
+    private readonly messageRepository: Repository<Message>,
   ) {}
 
   async createAppointment(
@@ -121,7 +121,7 @@ export class AppointmentsService {
     loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { id: appointmentId, active: true },
     });
 
     if (!appointment) {
@@ -144,6 +144,7 @@ export class AppointmentsService {
   async getAppointments(
     loginUser: AccessTokenPayloadDto,
     pagination: PaginationDto,
+    active: string = 'true',
   ): Promise<ApiResponseDto> {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
@@ -152,7 +153,7 @@ export class AppointmentsService {
       if (loginUser.role === 'doctor') {
         const [appointments, total] =
           await this.appointmentRepository.findAndCount({
-            where: { doctor_id: loginUser.id, active: true },
+            where: { doctor_id: loginUser.id, active: active === 'true' },
             relations: ['patient'],
             order: { created_at: 'DESC' },
             skip,

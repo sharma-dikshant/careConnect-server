@@ -44,11 +44,17 @@ export class AppointmentsController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'active', required: false, type: Boolean, example: true })
   async getAppointments(
     @Query() pagination: PaginationDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
+    @Query() active: 'true' | 'false',
   ): Promise<ApiResponseDto> {
-    return this.appointmentsService.getAppointments(loginUser, pagination);
+    return this.appointmentsService.getAppointments(
+      loginUser,
+      pagination,
+      active,
+    );
   }
 
   @Patch(':appointmentId')

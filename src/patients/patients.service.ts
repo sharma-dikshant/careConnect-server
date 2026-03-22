@@ -5,7 +5,7 @@ import { Patient } from '../entities/patient.entity';
 import { Appointment } from '../entities/appointment.entity';
 import { Doctor } from '../entities/doctor.entity';
 import { PatientCreateDto, PatientUpdateDto } from '../dto/patient.dto';
-import { AccessTokenPayloadDto } from '../dto/auth.dto';
+import { AccessTokenPayloadDto, PatientSignupDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { hashPassword } from '../utils/password.util';
 import { PaginationDto, paginate } from '../dto/pagination.dto';
@@ -14,12 +14,46 @@ import { PaginationDto, paginate } from '../dto/pagination.dto';
 export class PatientsService {
   constructor(
     @InjectRepository(Patient)
-    private patientRepository: Repository<Patient>,
+    private readonly patientRepository: Repository<Patient>,
     @InjectRepository(Appointment)
-    private appointmentRepository: Repository<Appointment>,
+    private readonly appointmentRepository: Repository<Appointment>,
     @InjectRepository(Doctor)
-    private doctorRepository: Repository<Doctor>,
+    private readonly doctorRepository: Repository<Doctor>,
   ) {}
+
+  async registerPatient(data: PatientSignupDto): Promise<ApiResponseDto> {
+    const existing = await this.patientRepository.findOne({
+      where: { email: data.email },
+    });
+
+    if (existing) {
+      throw new HttpException(
+        `user with email ${data.email} already exists`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    try {
+      const hashedPassword = await hashPassword(data.password);
+      const newPatient = this.patientRepository.create({
+        ...data,
+        password: hashedPassword,
+      });
+
+      await this.patientRepository.save(newPatient);
+
+      return new ApiResponseDto('account created successfully', {
+        id: newPatient.id,
+        name: newPatient.name,
+        email: newPatient.email,
+      });
+    } catch (error) {
+      throw new HttpException(
+        'failed to create account',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   async addPatient(
     body: PatientCreateDto,

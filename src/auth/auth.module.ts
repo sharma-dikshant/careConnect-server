@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { Patient } from '../entities/patient.entity';
       }),
       inject: [ConfigService],
     }),
+    OtpModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

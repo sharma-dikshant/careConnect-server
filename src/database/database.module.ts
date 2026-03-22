@@ -29,9 +29,13 @@ import { Message } from '../entities/message.entity';
         ],
         synchronize: true, // Set to false in production
         logging: false,
-        // ssl: {
-        //   rejectUnauthorized: false,
-        // },
+        ...(configService.get('NODE_ENV') === 'production'
+          ? {
+              ssl: {
+                rejectUnauthorized: false,
+              },
+            }
+          : {}),
       }),
       inject: [ConfigService],
     }),
