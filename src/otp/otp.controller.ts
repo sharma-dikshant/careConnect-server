@@ -8,12 +8,17 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { OtpService } from './otp.service';
-import { VerifyOtpDto } from '../dto/verify-otp.dto';
+import { ResendOtpDto, VerifyOtpDto } from '../dto/verify-otp.dto';
 
 @ApiTags('OTP')
 @Controller('otp')
 export class OtpController {
   constructor(private readonly otpService: OtpService) {}
+
+  @Post('/send')
+  async sendOtp(@Body() data: ResendOtpDto) {
+    return this.otpService.resendOtp(data);
+  }
 
   @Post('/verify')
   @HttpCode(HttpStatus.OK)
@@ -56,6 +61,6 @@ export class OtpController {
     },
   })
   async verifyOtp(@Body() data: VerifyOtpDto) {
-    return this.otpService.verifyOtp(data.to, data.type, data.otp);
+    return this.otpService.verifyOtp(data);
   }
 }

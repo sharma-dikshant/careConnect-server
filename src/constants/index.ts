@@ -4,3 +4,14 @@ export enum OTP_TYPE {
   APPOINTMENT_CREATE = 'appointment-create',
   APPOINTMENT_CLOSE = 'appointment-close',
 }
+
+export const OTP_KEYS = {
+  tempDataKey: (type: OTP_TYPE, entityId: string) => `temp:${type}:${entityId}`,
+  otpKey: (to: string, type: OTP_TYPE, entityId: string) =>
+    `otp:${to}:${type}:${entityId}`,
+  verifyTokenKey: (verifyToken: string) => `verifyToken:${verifyToken}`,
+};
+
+export enum EMAIL_TEMPLATES {
+  WELCOME = 'welcome',
+}

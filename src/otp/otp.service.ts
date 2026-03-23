@@ -1,40 +1,34 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { OTP_TYPE } from '../constants/index';
 import {
-  generateOtp,
-  prepareOtpEmailBody,
-  prepareOtpEmailSubject,
-} from './helpers/otp.helper';
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+import { OTP_KEYS, OTP_TYPE } from '../constants/index';
+import { generateOtp } from './helpers/otp.helper';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import emailUtility from 'src/utils/email.util';
-import { PatientsService } from 'src/patients/patients.service';
-import { UsersService } from 'src/users/users.service';
-import { DoctorSignupDto, PatientSignupDto } from 'src/dto/auth.dto';
-import { EMAIL_TEMPLATE, getEmailTemplate } from 'src/templates';
+
+import { ResendOtpDto, VerifyOtpDto } from 'src/dto/verify-otp.dto';
+import { randomUUID } from 'node:crypto';
+import { ApiResponseDto } from 'src/dto/api-response.dto';
 
 @Injectable()
 export class OtpService {
-  constructor(
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly patientService: PatientsService,
-    private readonly doctorService: UsersService,
-  ) {}
+  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
-  async sendOtp(to: string, type: OTP_TYPE, data: any) {
+  async sendOtp(to: string, type: OTP_TYPE, entityId: string) {
     const otp = generateOtp();
-    const emailSubject = prepareOtpEmailSubject(type);
-    const emailBody = prepareOtpEmailBody(type, otp, data?.name ?? '');
+    const otpKey = OTP_KEYS.otpKey(to, type, entityId);
 
-    // store in cache
-    await Promise.all([
-      this.cacheManager.set(`${type}:${to}`, otp, 15 * 60 * 60 * 1000),
-      this.cacheManager.set(`data-${type}:${to}`, data, 15 * 60 * 60 * 1000),
-    ]);
+    // store otp
+    await this.cacheManager.set(otpKey, otp, 5 * 60 * 50 * 1000);
+    // console.log(`otp send successfulty to ${to}: ${otp}`);
 
     // send email
     emailUtility
-      .send(to, emailSubject, emailBody)
+      .sendOtpEmail(to, type, otp)
       .then(() => {
         console.log(`otp ${type} sent to ${to} successfully`);
       })
@@ -43,70 +37,40 @@ export class OtpService {
       });
   }
 
-  async verifyOtp(to: string, type: OTP_TYPE, otp: string) {
-    // verify otp
-    const cachedOtp = await this.cacheManager.get(`${type}:${to}`);
-    if (!cachedOtp || cachedOtp !== otp) {
-      throw new UnauthorizedException('invalid otp or credentials');
+  async verifyOtp(data: VerifyOtpDto) {
+    const { to, otp, type, entityId } = data;
+    const otpKey = OTP_KEYS.otpKey(to, type, entityId);
+
+    // fetch and verify otp
+    const cachedOtp = await this.cacheManager.get(otpKey);
+
+    if (!cachedOtp) {
+      throw new BadRequestException('please retry sending otp again.');
     }
 
-    // get otp related data
-    const otpData = await this.cacheManager.get(`data-${type}:${to}`);
-
-    // clean up cache
-    await Promise.all([
-      this.cacheManager.del(`${type}:${to}`),
-      this.cacheManager.del(`data-${type}:${to}`),
-    ]);
-
-    // perform action based on otp type
-    switch (type) {
-      case OTP_TYPE.SIGNUP_DOCTOR: {
-        const doctorData = otpData as DoctorSignupDto;
-        const result = await this.doctorService.addDoctor(doctorData);
-        emailUtility
-          .send(
-            to,
-            'Welcome to CareConnect!',
-            getEmailTemplate(EMAIL_TEMPLATE.WELCOME, {
-              name: doctorData.name,
-              role: 'doctor',
-            }),
-          )
-          .then(() => console.log(`welcome email sent to ${to}`))
-          .catch((err) =>
-            console.log(`failed to send welcome email to ${to}. Error: ${err}`),
-          );
-        return result;
-      }
-
-      case OTP_TYPE.SIGNUP_PATIENT: {
-        const patientData = otpData as PatientSignupDto;
-        const result = await this.patientService.registerPatient(patientData);
-        emailUtility
-          .send(
-            to,
-            'Welcome to CareConnect!',
-            getEmailTemplate(EMAIL_TEMPLATE.WELCOME, {
-              name: patientData.name,
-              role: 'patient',
-            }),
-          )
-          .then(() => console.log(`welcome email sent to ${to}`))
-          .catch((err) =>
-            console.log(`failed to send welcome email to ${to}. Error: ${err}`),
-          );
-        return result;
-      }
-
-      case OTP_TYPE.APPOINTMENT_CREATE:
-        return `your otp is ${otp}`;
-
-      case OTP_TYPE.APPOINTMENT_CLOSE:
-        return `your otp is ${otp}`;
-
-      default:
-        throw new Error(`invalid otp type ${type}`);
+    if (cachedOtp !== otp) {
+      throw new ForbiddenException('invalid otp.');
     }
+
+    // generate verify token
+    const verifyToken = randomUUID();
+    const verifyKey = OTP_KEYS.verifyTokenKey(verifyToken);
+
+    // store verifyToken details
+    await this.cacheManager.set(verifyKey, { to, type, entityId });
+
+    return new ApiResponseDto('otp verified successfully.', { verifyToken });
+  }
+
+  async resendOtp(data: ResendOtpDto) {
+    const tempDataKey = OTP_KEYS.tempDataKey(data.type, data.entityId);
+
+    if (!tempDataKey) {
+      throw new BadRequestException('please retry the operation.');
+    }
+
+    // send new Otp
+    await this.sendOtp(data.to, data.type, data.entityId);
+    return new ApiResponseDto('otp send successfully');
   }
 }
