@@ -1,4 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  BadRequestException,
+  Headers,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, DoctorSignupDto, PatientSignupDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
@@ -20,6 +26,14 @@ export class AuthController {
   @Post('signup/patient')
   async signupPatient(@Body() body: PatientSignupDto): Promise<ApiResponseDto> {
     return this.authService.signupPatient(body);
+  }
+
+  @Post('signup/confirm')
+  async signupConfirm(@Headers('x-verify-token') verifyToken: string) {
+    if (!verifyToken) {
+      throw new BadRequestException('missing or invalid headers');
+    }
+    return this.authService.signupConfirm(verifyToken);
   }
 
   @Post('logout')

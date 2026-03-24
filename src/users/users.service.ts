@@ -22,7 +22,7 @@ export class UsersService {
     private readonly patientRepository: Repository<Patient>,
   ) {}
 
-  async addDoctor(doctor: DoctorSignupDto) {
+  async registerDoctor(doctor: DoctorSignupDto) {
     const existing = await this.doctorRepository.findOne({
       where: [{ email: doctor.email }, { phone: doctor.phone }],
     });

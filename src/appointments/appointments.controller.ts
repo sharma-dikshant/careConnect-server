@@ -11,6 +11,8 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
+  BadRequestException,
+  Headers,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
@@ -32,13 +34,22 @@ import { PaginationDto } from '../dto/pagination.dto';
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
-  @Post()
+  // @Post()
+  // @Roles('doctor')
+  // async createAppointment(
+  //   @Body() body: AppointmentCreateDto,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.appointmentsService.createAppointment(body, loginUser);
+  // }
+
+  @Post('initialize')
   @Roles('doctor')
   async createAppointment(
     @Body() body: AppointmentCreateDto,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.appointmentsService.createAppointment(body, loginUser);
+    return this.appointmentsService.initiateCreateAppointment(body, loginUser);
   }
 
   @Get()
@@ -74,13 +85,34 @@ export class AppointmentsController {
     );
   }
 
-  @Delete(':appointmentId')
+  // @Delete(':appointmentId')
+  // @Roles('doctor')
+  // @ApiOperation({ summary: 'Soft delete an appointment (doctor only)' })
+  // async deleteAppointment(
+  //   @Param('appointmentId', ParseIntPipe) appointmentId: number,
+  //   @CurrentUser() loginUser: AccessTokenPayloadDto,
+  // ): Promise<ApiResponseDto> {
+  //   return this.appointmentsService.deleteAppointment(appointmentId, loginUser);
+  // }
+
+  @Delete(':appointmentId/initialize')
   @Roles('doctor')
   @ApiOperation({ summary: 'Soft delete an appointment (doctor only)' })
   async deleteAppointment(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.appointmentsService.deleteAppointment(appointmentId, loginUser);
+    return this.appointmentsService.initiateDeleteAppointment(
+      appointmentId,
+      loginUser,
+    );
+  }
+
+  @Post('/confirm')
+  async appointmentConfirm(@Headers('x-verify-token') verifyToken: string) {
+    if (!verifyToken) {
+      throw new BadRequestException('missing or invalid headers');
+    }
+    return this.appointmentsService.confirmAppointment(verifyToken);
   }
 }

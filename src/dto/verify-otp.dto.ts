@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, Length } from 'class-validator';
+import { IsEnum, IsString, IsUUID, Length } from 'class-validator';
 import { OTP_TYPE } from 'src/constants';
 
 export class VerifyOtpDto {
@@ -24,4 +24,35 @@ export class VerifyOtpDto {
   })
   @IsEnum(OTP_TYPE)
   type: OTP_TYPE;
+
+  @ApiProperty({
+    description: 'entity Id',
+    example: '',
+  })
+  @IsUUID()
+  entityId: string;
+}
+
+export class ResendOtpDto {
+  @ApiProperty({
+    description: 'The email address the OTP was sent to',
+    example: 'doctor@example.com',
+  })
+  @IsString()
+  to: string;
+
+  @ApiProperty({
+    description: 'The type of OTP flow',
+    enum: OTP_TYPE,
+    example: OTP_TYPE.SIGNUP_DOCTOR,
+  })
+  @IsEnum(OTP_TYPE)
+  type: OTP_TYPE;
+
+  @ApiProperty({
+    description: 'entity Id',
+    example: '',
+  })
+  @IsUUID()
+  entityId: string;
 }

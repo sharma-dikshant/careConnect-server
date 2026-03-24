@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Appointment } from '../entities/appointment.entity';
@@ -12,6 +12,11 @@ import {
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto, paginate } from '../dto/pagination.dto';
+import { randomUUID } from 'node:crypto';
+import { OTP_KEYS, OTP_TYPE } from 'src/constants';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+import { OtpService } from 'src/otp/otp.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -24,6 +29,8 @@ export class AppointmentsService {
     private readonly patientRepository: Repository<Patient>,
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
+    @Inject(CACHE_MANAGER) private readonly cacheManger: Cache,
+    private readonly otpService: OtpService,
   ) {}
 
   async createAppointment(
@@ -135,10 +142,24 @@ export class AppointmentsService {
       );
     }
 
-    appointment.active = false;
-    await this.appointmentRepository.save(appointment);
+    // store temp data
+    const entityId = randomUUID();
+    const tempKey = OTP_KEYS.tempDataKey(OTP_TYPE.APPOINTMENT_CLOSE, entityId);
 
-    return new ApiResponseDto('Appointment deleted successfully');
+    await this.cacheManger.set(tempKey, {
+      appointmentId,
+    });
+
+    // send otp
+    await this.otpService.sendOtp(
+      appointment.patient.email,
+      OTP_TYPE.APPOINTMENT_CREATE,
+      entityId,
+    );
+
+    return new ApiResponseDto('otp sent successful', {
+      entityId,
+    });
   }
 
   async getAppointments(
@@ -258,6 +279,201 @@ export class AppointmentsService {
         'Failed to retrieve messages',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  /**
+   *  OTP VERIFICATION SERVICES
+   */
+
+  async initiateCreateAppointment(
+    data: AppointmentCreateDto,
+    loginUser: AccessTokenPayloadDto,
+  ): Promise<ApiResponseDto> {
+    // Verify user is a doctor
+    if (loginUser.role !== 'doctor') {
+      throw new HttpException(
+        'Only doctors can create appointments',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    // Find patient by email
+    const patient = await this.patientRepository.findOne({
+      where: { email: data.patientEmail },
+    });
+
+    if (!patient) {
+      throw new HttpException(
+        'Patient not found with this email',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    try {
+      // store temp data
+      const entityId = randomUUID();
+      const tempKey = OTP_KEYS.tempDataKey(
+        OTP_TYPE.APPOINTMENT_CREATE,
+        entityId,
+      );
+
+      await this.cacheManger.set(tempKey, {
+        patient,
+        doctor: { id: loginUser.id },
+        title: data.title,
+        description: data.description,
+      });
+
+      // send otp
+      const { otpExpiry } = await this.otpService.sendOtp(
+        patient.email,
+        OTP_TYPE.APPOINTMENT_CREATE,
+        entityId,
+      );
+
+      return new ApiResponseDto('otp sent successful', {
+        otpExpiry,
+        entityId,
+      });
+    } catch (error) {
+      throw new HttpException(
+        'Failed to create appointment',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async initiateDeleteAppointment(
+    appointmentId: number,
+    loginUser: AccessTokenPayloadDto,
+  ) {
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id: appointmentId, active: true },
+      relations: ['patient'],
+    });
+
+    if (!appointment) {
+      throw new HttpException('Appointment not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (appointment.doctor_id !== loginUser.id) {
+      throw new HttpException(
+        'You are not the doctor for this appointment',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    // store temp data
+    const entityId = randomUUID();
+    const tempKey = OTP_KEYS.tempDataKey(OTP_TYPE.APPOINTMENT_CLOSE, entityId);
+
+    await this.cacheManger.set(tempKey, {
+      appointmentId,
+    });
+
+    // send otp
+    const { otpExpiry } = await this.otpService.sendOtp(
+      appointment.patient.email,
+      OTP_TYPE.APPOINTMENT_CLOSE,
+      entityId,
+    );
+
+    return new ApiResponseDto('otp sent successful', {
+      otpExpiry,
+      entityId,
+    });
+  }
+
+  async confirmAppointment(verifyToken: string): Promise<ApiResponseDto> {
+    const tokenKey = OTP_KEYS.verifyTokenKey(verifyToken);
+
+    const verifyData:
+      | { to: string; type: OTP_TYPE; entityId: string }
+      | undefined = await this.cacheManger.get(tokenKey);
+
+    if (!verifyData) {
+      throw new HttpException(
+        'Invalid or expired token',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const tempDataKey = OTP_KEYS.tempDataKey(
+      verifyData.type,
+      verifyData.entityId,
+    );
+
+    const data:
+      | {
+          patient: Patient;
+          doctor: { id: number };
+          title: string;
+          description: string;
+        }
+      | { appointmentId: number }
+      | undefined = await this.cacheManger.get(tempDataKey);
+
+    if (!data) {
+      throw new HttpException(
+        'Session expired, please retry',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    switch (verifyData.type) {
+      case OTP_TYPE.APPOINTMENT_CREATE: {
+        const createData = data as {
+          patient: Patient;
+          doctor: { id: number };
+          title: string;
+          description: string;
+        };
+
+        const appointment = this.appointmentRepository.create({
+          patient: createData.patient,
+          doctor: createData.doctor as Doctor,
+          title: createData.title,
+          description: createData.description,
+        });
+
+        await this.appointmentRepository.save(appointment);
+
+        return new ApiResponseDto('Appointment created successfully', {
+          id: appointment.id,
+          title: appointment.title,
+          description: appointment.description,
+          patient: {
+            id: createData.patient.id,
+            name: createData.patient.name,
+            email: createData.patient.email,
+          },
+          created_at: appointment.created_at,
+        });
+      }
+
+      case OTP_TYPE.APPOINTMENT_CLOSE: {
+        const { appointmentId } = data as { appointmentId: number };
+
+        const appointment = await this.appointmentRepository.findOne({
+          where: { id: appointmentId },
+        });
+
+        if (!appointment) {
+          throw new HttpException(
+            'Appointment not found',
+            HttpStatus.NOT_FOUND,
+          );
+        }
+
+        appointment.active = false;
+        await this.appointmentRepository.save(appointment);
+
+        return new ApiResponseDto('Appointment deleted successfully');
+      }
+
+      default:
+        throw new HttpException('Invalid OTP type', HttpStatus.BAD_REQUEST);
     }
   }
 }
