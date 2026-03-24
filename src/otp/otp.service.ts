@@ -19,11 +19,12 @@ export class OtpService {
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
   async sendOtp(to: string, type: OTP_TYPE, entityId: string) {
+    const otpExpiry = 15;
     const otp = generateOtp();
     const otpKey = OTP_KEYS.otpKey(to, type, entityId);
 
     // store otp
-    await this.cacheManager.set(otpKey, otp, 5 * 60 * 50 * 1000);
+    await this.cacheManager.set(otpKey, otp, otpExpiry * 60 * 1000);
     // console.log(`otp send successfulty to ${to}: ${otp}`);
 
     // send email
@@ -35,6 +36,8 @@ export class OtpService {
       .catch((err) => {
         console.log(`failed to send ${type} otp to ${to}. Error: ${err}`);
       });
+
+    return { otpExpiry };
   }
 
   async verifyOtp(data: VerifyOtpDto) {
@@ -70,7 +73,10 @@ export class OtpService {
     }
 
     // send new Otp
-    await this.sendOtp(data.to, data.type, data.entityId);
-    return new ApiResponseDto('otp send successfully');
+    const { otpExpiry } = await this.sendOtp(data.to, data.type, data.entityId);
+    return new ApiResponseDto('otp send successfully', {
+      otpExpiry,
+      entityId: data.entityId,
+    });
   }
 }

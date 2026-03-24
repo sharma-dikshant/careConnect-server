@@ -129,13 +129,16 @@ export class AuthService {
       await this.cacheManager.set(tempKey, doctor);
 
       // send otp
-      await this.otpService.sendOtp(
+      const { otpExpiry } = await this.otpService.sendOtp(
         doctor.email,
         OTP_TYPE.SIGNUP_DOCTOR,
         entityId,
       );
 
-      return new ApiResponseDto('otp send successfully', { entityId });
+      return new ApiResponseDto('otp send successfully', {
+        otpExpiry,
+        entityId,
+      });
     } catch (error) {
       throw new HttpException(
         'failed to create account',
@@ -162,13 +165,16 @@ export class AuthService {
       await this.cacheManager.set(tempKey, patient);
 
       // send otp
-      await this.otpService.sendOtp(
+      const { otpExpiry } = await this.otpService.sendOtp(
         patient.email,
         OTP_TYPE.SIGNUP_PATIENT,
         entityId,
       );
 
-      return new ApiResponseDto('otp send successfully', { entityId });
+      return new ApiResponseDto('otp send successfully', {
+        otpExpiry,
+        entityId,
+      });
     } catch (error) {
       throw new HttpException(
         'failed to create account',
@@ -210,7 +216,7 @@ export class AuthService {
             'Welcome to CareConnect!',
             getEmailTemplate(EMAIL_TEMPLATE.WELCOME, {
               name: data.name,
-              role: 'patient',
+              role: 'doctor',
             }),
           )
           .then(() => console.log(`welcome email sent to ${data.email}`))
