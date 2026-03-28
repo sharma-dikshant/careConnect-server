@@ -4,6 +4,7 @@ import {
   Body,
   BadRequestException,
   Headers,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, DoctorSignupDto, PatientSignupDto } from '../dto/auth.dto';
@@ -14,6 +15,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @HttpCode(200)
   async login(@Body() body: LoginDto): Promise<ApiResponseDto> {
     return this.authService.login(body);
   }
