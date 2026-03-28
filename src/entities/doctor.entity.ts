@@ -4,9 +4,12 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   OneToMany,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Appointment } from './appointment.entity';
 import { CareProtocol } from './care_protocol.entity';
+import { Balance } from './balance.entity';
 
 @Entity('doctors')
 export class Doctor {
@@ -51,6 +54,9 @@ export class Doctor {
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
+
+  @OneToOne(() => Balance, (balance) => balance.doctor)
+  balance: Balance;
 
   @OneToMany(() => Appointment, (appointment) => appointment.doctor)
   appointments: Appointment[];
