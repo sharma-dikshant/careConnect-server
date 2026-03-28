@@ -7,6 +7,7 @@ import { Appointment } from '../entities/appointment.entity';
 import { CareProtocol } from '../entities/care_protocol.entity';
 import { AppointmentProtocol } from '../entities/appointment_protocol';
 import { Message } from '../entities/message.entity';
+import { Balance } from 'src/entities/balance.entity';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { Message } from '../entities/message.entity';
           CareProtocol,
           AppointmentProtocol,
           Message,
+          Balance,
         ],
         synchronize: true, // Set to false in production
         logging: false,

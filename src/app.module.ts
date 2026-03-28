@@ -12,6 +12,8 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { S3Module } from './utils/s3.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { OtpModule } from './otp/otp.module';
+import { AiModule } from './ai/ai.module';
+import { CreditsModule } from './credits/credits.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { OtpModule } from './otp/otp.module';
     MessagesModule,
     AppointmentsModule,
     OtpModule,
+    AiModule,
+    CreditsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
