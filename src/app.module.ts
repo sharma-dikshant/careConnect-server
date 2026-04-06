@@ -16,6 +16,7 @@ import { AiModule } from './ai/ai.module';
 import { CreditsModule } from './credits/credits.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SeedModule } from './seed/seed.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SeedModule } from './seed/seed.module';
     CreditsModule,
     SubscriptionsModule,
     SeedModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
