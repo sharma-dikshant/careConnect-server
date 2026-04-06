@@ -1,7 +1,9 @@
+import { Doctor } from '@entities/doctor.entity';
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Balance } from 'src/entities/balance.entity';
@@ -12,6 +14,7 @@ export class CreditsService {
   constructor(
     @InjectRepository(Balance)
     private readonly balanceRepo: Repository<Balance>,
+    @InjectRepository(Doctor) private readonly userRepo: Repository<Doctor>,
   ) {}
 
   async getUserCredits(userId: number): Promise<number> {
@@ -34,9 +37,18 @@ export class CreditsService {
     return true;
   }
 
-  async addUserCredits(userId: number, amount: number): Promise<boolean> {
+  async addUserCredits(
+    userId: number,
+    amount: number,
+    expiry: number,
+  ): Promise<boolean> {
     if (amount <= 0) {
       throw new BadRequestException(`invalid amount for credit`);
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`user not found with id ${userId}`);
     }
     const balance = await this.balanceRepo.findOne({
       where: { userId },
@@ -44,7 +56,11 @@ export class CreditsService {
     });
 
     if (!balance) {
-      await this.balanceRepo.save({ userId, credits: amount });
+      await this.balanceRepo.save({
+        userId,
+        credits: amount,
+        expiresAt: new Date(Date.now() + expiry * 24 * 60 * 60 * 1000),
+      });
       return true;
     }
 
@@ -59,9 +75,12 @@ export class CreditsService {
       throw new BadRequestException(`invalid amount for debit`);
     }
 
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`user not found with id ${userId}`);
+    }
     const balance = await this.balanceRepo.findOne({
       where: { userId },
-      select: ['credits'],
     });
 
     if (!balance || !(await this.hasEnoughCredits(userId, amount))) {
