@@ -7,12 +7,17 @@ import { Appointment } from '../entities/appointment.entity';
 import { CareProtocol } from '../entities/care_protocol.entity';
 import { AppointmentProtocol } from '../entities/appointment_protocol';
 import { Message } from '../entities/message.entity';
-import { Balance } from 'src/entities/balance.entity';
+import { Balance } from '../entities/balance.entity';
+import { Subscription } from '../entities/subscription.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+      ],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DB_HOST'),
@@ -28,6 +33,7 @@ import { Balance } from 'src/entities/balance.entity';
           AppointmentProtocol,
           Message,
           Balance,
+          Subscription,
         ],
         synchronize: true, // Set to false in production
         logging: false,
