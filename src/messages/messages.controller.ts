@@ -7,6 +7,9 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  HttpCode,
+  BadRequestException,
+  Headers,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
@@ -18,6 +21,7 @@ import { MessageCreateDto } from '../dto/message.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto } from '../dto/pagination.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @Controller('api/messages')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,7 +36,11 @@ export class MessagesController {
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
   ): Promise<ApiResponseDto> {
-    return this.MessagesService.sendBotMessage(body, loginUser, appointmentId);
+    return this.MessagesService.sendBotMessage(
+      body,
+      loginUser.id,
+      appointmentId,
+    );
   }
 
   @Get('/appointments/:appointmentId')
@@ -52,5 +60,21 @@ export class MessagesController {
       loginUser,
       pagination,
     );
+  }
+
+  /**
+   * Api for hardware support
+   */
+  @Post('/device')
+  @HttpCode(200)
+  @Public()
+  async sendMessageByDevice(
+    @Headers('X-Device-Token') deviceToken: string,
+    @Body() body: MessageCreateDto,
+  ) {
+    if (!deviceToken) {
+      throw new BadRequestException('missing headers');
+    }
+    return this.MessagesService.sendBotMessageByDevice(deviceToken, body);
   }
 }

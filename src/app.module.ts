@@ -17,6 +17,7 @@ import { CreditsModule } from './credits/credits.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SeedModule } from './seed/seed.module';
 import { PaymentsModule } from './payments/payments.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PaymentsModule } from './payments/payments.module';
     SubscriptionsModule,
     SeedModule,
     PaymentsModule,
+    DevicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

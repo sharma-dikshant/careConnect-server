@@ -9,6 +9,7 @@ import { AppointmentProtocol } from '../entities/appointment_protocol';
 import { Message } from '../entities/message.entity';
 import { Balance } from '../entities/balance.entity';
 import { Subscription } from '../entities/subscription.entity';
+import { DeviceToken } from '@entities/device_token.entity';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Subscription } from '../entities/subscription.entity';
           Message,
           Balance,
           Subscription,
+          DeviceToken,
         ],
         synchronize: true, // Set to false in production
         logging: false,
