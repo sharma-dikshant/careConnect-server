@@ -12,6 +12,7 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { S3Module } from './utils/s3.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { OtpModule } from './otp/otp.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { OtpModule } from './otp/otp.module';
     MessagesModule,
     AppointmentsModule,
     OtpModule,
+    DevicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
