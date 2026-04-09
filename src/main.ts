@@ -7,24 +7,27 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // Enable CORS
 
-  app.enableCors({
-    origin: (origin, callback) => {
-      const allowed = [
-        'http://13.232.144.165',
-        'http://13.232.144.165:3000',
-        'http://localhost:5173',
-        'http://65.2.29.66:3000',
-        'http://localhost:3000',
-        'https://pamela-xylic-na.ngrok-free.dev',
-        'http://localhost:5174',
-      ];
+  // app.enableCors({
+  //   origin: (origin, callback) => {
+  //     const allowed = [
+  //       'http://13.232.144.165',
+  //       'http://13.232.144.165:3000',
+  //       'http://65.2.29.66:3000',
+  //       'http://localhost:3000',
+  //       'https://pamela-xylic-na.ngrok-free.dev',
+  //       'http://localhost:5174',
+  //     ];
 
-      if (!origin || allowed.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+  //     if (!origin || allowed.includes(origin)) {
+  //       callback(null, true);
+  //     } else {
+  //       callback(new Error('Not allowed by CORS'));
+  //     }
+  //   },
+  //   credentials: true,
+  // });
+  app.enableCors({
+    origin: true,
     credentials: true,
   });
   const config = new DocumentBuilder()
