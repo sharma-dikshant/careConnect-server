@@ -1,5 +1,6 @@
 import { Appointment } from '@entities/appointment.entity';
 import { DeviceToken } from '@entities/device_token.entity';
+import { Patient } from '@entities/patient.entity';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiResponseDto } from 'src/dto/api-response.dto';
@@ -13,6 +14,8 @@ export class DevicesService {
     private readonly deviceTokenRepo: Repository<DeviceToken>,
     @InjectRepository(Appointment)
     private readonly appointmentRepo: Repository<Appointment>,
+    @InjectRepository(Patient)
+    private readonly patientRepo: Repository<Patient>,
   ) {}
   async create(userId: number, createDeviceDto: DeviceCreateDto) {
     // find appointment
@@ -20,7 +23,6 @@ export class DevicesService {
       where: {
         id: createDeviceDto.appointmentId,
         doctor_id: userId,
-        patient_id: createDeviceDto.patientId,
         active: true,
       },
     });
@@ -32,13 +34,24 @@ export class DevicesService {
       );
     }
 
+    const patient = await this.patientRepo.findOne({
+      where: { id: appointment.patient_id },
+    });
+
+    if (!patient) {
+      throw new HttpException(
+        'patient for this appointment no longer exists',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     // create token
-    const token = crypto.randomUUID();
+    const token = Date.now().toString();
 
     // save token
     const newDevice = this.deviceTokenRepo.create({
-      patientId: createDeviceDto.patientId,
-      appointmentId: createDeviceDto.appointmentId,
+      patientId: appointment.patient_id,
+      appointmentId: appointment.id,
       token,
     });
     await this.deviceTokenRepo.save(newDevice);
