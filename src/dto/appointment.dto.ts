@@ -1,29 +1,41 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 
 export class AppointmentCreateDto {
   @ApiProperty()
-  @IsEmail()
+  @IsEmail({}, { message: 'Please provide a valid patient email address' })
   patientEmail: string;
 
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'Title must be a string' })
+  @MinLength(3, { message: 'Title must be at least 3 characters' })
+  @MaxLength(100, { message: 'Title must not exceed 100 characters' })
   title: string;
 
   @ApiProperty({ required: false })
-  @IsString()
+  @IsString({ message: 'Description must be a string' })
+  @MaxLength(500, { message: 'Description must not exceed 500 characters' })
   @IsOptional()
   description?: string;
 }
 
 export class AppointmentUpdateDto {
   @ApiPropertyOptional()
-  @IsString()
+  @IsString({ message: 'Title must be a string' })
+  @MinLength(3, { message: 'Title must be at least 3 characters' })
+  @MaxLength(100, { message: 'Title must not exceed 100 characters' })
   @IsOptional()
   title?: string;
 
   @ApiPropertyOptional()
-  @IsString()
+  @IsString({ message: 'Description must be a string' })
+  @MaxLength(500, { message: 'Description must not exceed 500 characters' })
   @IsOptional()
   description?: string;
 }

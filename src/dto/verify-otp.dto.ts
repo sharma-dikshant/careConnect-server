@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsUUID, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNumberString,
+  IsUUID,
+  Length,
+} from 'class-validator';
 import { OTP_TYPE } from 'src/constants';
 
 export class VerifyOtpDto {
@@ -7,14 +13,15 @@ export class VerifyOtpDto {
     description: 'The email address the OTP was sent to',
     example: 'doctor@example.com',
   })
-  @IsString()
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   to: string;
 
   @ApiProperty({
     description: 'The 6-digit OTP received via email',
     example: '482910',
   })
-  @IsString()
+  @IsNumberString({}, { message: 'OTP must contain only digits' })
+  @Length(6, 6, { message: 'OTP must be exactly 6 digits' })
   otp: string;
 
   @ApiProperty({
@@ -22,14 +29,14 @@ export class VerifyOtpDto {
     enum: OTP_TYPE,
     example: OTP_TYPE.SIGNUP_DOCTOR,
   })
-  @IsEnum(OTP_TYPE)
+  @IsEnum(OTP_TYPE, { message: 'Invalid OTP type provided' })
   type: OTP_TYPE;
 
   @ApiProperty({
     description: 'entity Id',
     example: '',
   })
-  @IsUUID()
+  @IsUUID(undefined, { message: 'Entity ID must be a valid UUID' })
   entityId: string;
 }
 
@@ -38,7 +45,7 @@ export class ResendOtpDto {
     description: 'The email address the OTP was sent to',
     example: 'doctor@example.com',
   })
-  @IsString()
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   to: string;
 
   @ApiProperty({
@@ -46,13 +53,13 @@ export class ResendOtpDto {
     enum: OTP_TYPE,
     example: OTP_TYPE.SIGNUP_DOCTOR,
   })
-  @IsEnum(OTP_TYPE)
+  @IsEnum(OTP_TYPE, { message: 'Invalid OTP type provided' })
   type: OTP_TYPE;
 
   @ApiProperty({
     description: 'entity Id',
     example: '',
   })
-  @IsUUID()
+  @IsUUID(undefined, { message: 'Entity ID must be a valid UUID' })
   entityId: string;
 }
