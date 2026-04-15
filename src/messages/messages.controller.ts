@@ -21,7 +21,7 @@ import { MessageCreateDto } from '../dto/message.dto';
 import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto } from '../dto/pagination.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/messages')
 @UseGuards(JwtAuthGuard, RolesGuard)

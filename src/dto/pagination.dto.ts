@@ -6,8 +6,8 @@ export class PaginationDto {
   @ApiPropertyOptional({ default: 1, minimum: 1, description: 'Page number' })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: 'Page must be a whole number' })
+  @Min(1, { message: 'Page must be at least 1' })
   page: number = 1;
 
   @ApiPropertyOptional({
@@ -18,13 +18,13 @@ export class PaginationDto {
   })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
+  @IsInt({ message: 'Limit must be a whole number' })
+  @Min(1, { message: 'Limit must be at least 1' })
+  @Max(100, { message: 'Limit must not exceed 100' })
   limit: number = 20;
 
   @IsOptional()
-  @IsBooleanString()
+  @IsBooleanString({ message: 'Active must be "true" or "false"' })
   active?: 'true' | 'false';
 }
 

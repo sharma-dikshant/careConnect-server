@@ -11,7 +11,7 @@ import {
   UpdatePatientProfileDto,
 } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
-import { hashPassword } from 'src/utils/password.util';
+import { hashPassword } from '../utils/password.util';
 
 @Injectable()
 export class UsersService {

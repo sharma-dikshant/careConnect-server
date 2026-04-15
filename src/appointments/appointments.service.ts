@@ -13,10 +13,10 @@ import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto, paginate } from '../dto/pagination.dto';
 import { randomUUID } from 'node:crypto';
-import { OTP_KEYS, OTP_TYPE } from 'src/constants';
+import { OTP_KEYS, OTP_TYPE } from '../constants';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { OtpService } from 'src/otp/otp.service';
+import { OtpService } from '../otp/otp.service';
 
 @Injectable()
 export class AppointmentsService {
