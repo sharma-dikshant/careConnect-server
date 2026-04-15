@@ -67,7 +67,7 @@ export class MessagesService {
 
     const [messages, total] = await this.messageRepository.findAndCount({
       where: { appointment_id: appointmentId },
-      order: { created_at: 'ASC' },
+      order: { created_at: 'DESC' },
       skip,
       take: limit,
     });
