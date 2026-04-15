@@ -14,7 +14,7 @@ import { AccessTokenPayloadDto } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { PaginationDto, paginate } from '../dto/pagination.dto';
 import axios from 'axios';
-import { DeviceToken } from '@entities/device_token.entity';
+import { DeviceToken } from '../entities/device_token.entity';
 
 @Injectable()
 export class MessagesService {
