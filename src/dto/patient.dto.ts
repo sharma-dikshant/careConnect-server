@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsString,
@@ -21,6 +22,9 @@ export class PatientCreateDto {
 
   @ApiProperty()
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty()
@@ -39,6 +43,9 @@ export class PatientUpdateDto {
 
   @ApiProperty()
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   @IsOptional()
   email?: string;
 

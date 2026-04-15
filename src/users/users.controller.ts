@@ -106,10 +106,9 @@ export class UsersController {
       ],
     },
   })
-  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   async updateProfile(
     @CurrentUser() loginUser: AccessTokenPayloadDto,
-    @Body() updateDto: UpdateDoctorProfileDto | UpdatePatientProfileDto,
+    @Body() updateDto: UpdateDoctorProfileDto, //TODO fix the dto, for only only using doctor update dto, but this api update details for both doctor and patient
   ): Promise<ApiResponseDto> {
     return this.usersService.updateProfile(loginUser, updateDto);
   }

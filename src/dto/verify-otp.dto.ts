@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -14,6 +15,9 @@ export class VerifyOtpDto {
     example: 'doctor@example.com',
   })
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   to: string;
 
   @ApiProperty({
@@ -46,6 +50,9 @@ export class ResendOtpDto {
     example: 'doctor@example.com',
   })
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   to: string;
 
   @ApiProperty({

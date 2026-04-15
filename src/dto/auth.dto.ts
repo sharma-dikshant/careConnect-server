@@ -11,7 +11,7 @@ import {
   Max,
   Matches,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class LoginDto {
   @ApiProperty({ enum: ['doctor', 'patient'] })
@@ -22,6 +22,9 @@ export class LoginDto {
 
   @ApiProperty()
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty()
@@ -39,6 +42,9 @@ export class DoctorSignupDto {
 
   @ApiProperty()
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty()
@@ -110,6 +116,9 @@ export class SignupDto {
 
   @ApiProperty()
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty()
@@ -183,6 +192,9 @@ export class PatientSignupDto {
 
   @ApiProperty()
   @IsEmail({}, { message: 'Please provide a valid email address' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty()
@@ -206,6 +218,9 @@ export class AccessTokenPayloadDto {
 
   @ApiProperty()
   @IsEmail()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 }
 
