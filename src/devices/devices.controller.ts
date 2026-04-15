@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -41,6 +42,18 @@ export class DevicesController {
   @Roles('doctor')
   findOne(@Param('id') id: string) {
     return this.devicesService.findOne(+id);
+  }
+
+  @Get('/appointments/:appointmentId')
+  @Roles('doctor')
+  findAllAppointmentDeviceToken(
+    @Param('appointmentId', ParseIntPipe) appointmentId: number,
+    @CurrentUser() loginUser: AccessTokenPayloadDto,
+  ) {
+    return this.devicesService.findAllAppointmentDevices(
+      loginUser.id,
+      appointmentId,
+    );
   }
 
   @Delete(':id')
