@@ -70,4 +70,27 @@ export class DevicesService {
   remove(id: number) {
     return `This action removes a #${id} device`;
   }
+
+  async findAllAppointmentDevices(userId: number, appointmentId: number) {
+    const appointment = await this.appointmentRepo.findOne({
+      where: {
+        id: appointmentId,
+        doctor_id: userId,
+        active: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new HttpException(
+        'no appointment found with given details',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const devices = await this.deviceTokenRepo.find({
+      where: { appointmentId },
+    });
+
+    return new ApiResponseDto('devices fetched successfully.', { devices });
+  }
 }
