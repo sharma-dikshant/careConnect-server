@@ -7,7 +7,7 @@ import { Appointment } from '../entities/appointment.entity';
 import { CareProtocol } from '../entities/care_protocol.entity';
 import { AppointmentProtocol } from '../entities/appointment_protocol';
 import { Message } from '../entities/message.entity';
-import { DeviceToken } from '@entities/device_token.entity';
+import { DeviceToken } from '../entities/device_token.entity';
 
 @Module({
   imports: [
