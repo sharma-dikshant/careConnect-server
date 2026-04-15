@@ -19,15 +19,15 @@ import {
 } from '../dto/auth.dto';
 import { ApiResponseDto } from '../dto/api-response.dto';
 import { verifyPassword } from '../utils/password.util';
-import { OtpService } from 'src/otp/otp.service';
-import emailUtility from 'src/utils/email.util';
-import { OTP_TYPE, OTP_KEYS } from 'src/constants';
+import { OtpService } from '../otp/otp.service';
+import emailUtility from '../utils/email.util';
+import { OTP_TYPE, OTP_KEYS } from '../constants';
 import { randomUUID } from 'node:crypto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { UsersService } from 'src/users/users.service';
-import { PatientsService } from 'src/patients/patients.service';
-import { EMAIL_TEMPLATE, getEmailTemplate } from 'src/templates';
+import { UsersService } from '../users/users.service';
+import { PatientsService } from '../patients/patients.service';
+import { EMAIL_TEMPLATE, getEmailTemplate } from '../templates';
 
 @Injectable()
 export class AuthService {

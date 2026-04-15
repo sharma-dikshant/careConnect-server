@@ -8,9 +8,9 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
-import { OtpModule } from 'src/otp/otp.module';
-import { PatientsModule } from 'src/patients/patients.module';
-import { UsersModule } from 'src/users/users.module';
+import { OtpModule } from '../otp/otp.module';
+import { PatientsModule } from '../patients/patients.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [

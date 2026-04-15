@@ -8,11 +8,11 @@ import { OTP_KEYS, OTP_TYPE } from '../constants/index';
 import { generateOtp } from './helpers/otp.helper';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import emailUtility from 'src/utils/email.util';
+import emailUtility from '../utils/email.util';
 
-import { ResendOtpDto, VerifyOtpDto } from 'src/dto/verify-otp.dto';
+import { ResendOtpDto, VerifyOtpDto } from '../dto/verify-otp.dto';
 import { randomUUID } from 'node:crypto';
-import { ApiResponseDto } from 'src/dto/api-response.dto';
+import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Injectable()
 export class OtpService {
