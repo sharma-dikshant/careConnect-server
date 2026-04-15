@@ -23,7 +23,7 @@ export class PaginationDto {
   @Max(100)
   limit: number = 20;
 
-   @IsOptional()
+  @IsOptional()
   @IsBooleanString()
   active?: 'true' | 'false';
 }
