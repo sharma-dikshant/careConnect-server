@@ -12,6 +12,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CareProtocolsService } from './care_protocols.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -31,7 +32,7 @@ export class CareProtocolsController {
   // POST ROUTES
   @Roles('doctor')
   @Post('')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async addCareProtocol(
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() loginUser: AccessTokenPayloadDto,
@@ -41,7 +42,7 @@ export class CareProtocolsController {
 
   @Roles('doctor', 'patient')
   @Post('locals/:appointmentId')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async addAppointmentCareProtocol(
     @Param('appointmentId', ParseIntPipe) appointmentId: number,
     @UploadedFile() file: Express.Multer.File,
