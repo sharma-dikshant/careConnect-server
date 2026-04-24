@@ -211,6 +211,12 @@ export class CareProtocolsService {
         HttpStatus.NOT_FOUND,
       );
     }
+    if (!file) {
+      throw new HttpException(
+        'No file uploaded. Send a PDF via multipart/form-data with field name "file".',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const ext = path.extname(file.originalname).toLowerCase();
     if (!ALLOWED_EXT.includes(ext)) {
@@ -224,11 +230,29 @@ export class CareProtocolsService {
     const s3Key = `uploads/appointments/${appointment.doctor_id}/${appointment.patient_id}/${filename}`;
 
     try {
+      // console.log(file);
+      console.log({
+        exists: !!file,
+        bufferExists: !!file?.buffer,
+        bufferType: typeof file?.buffer,
+        isBuffer: Buffer.isBuffer(file?.buffer),
+        size: file?.buffer?.length,
+      });
+
+      const fileBuffer = Buffer.isBuffer(file.buffer)
+        ? file.buffer
+        : Buffer.from(Object.values(file.buffer));
+
       const s3Url = await this.s3Service.uploadFile(
-        file.buffer,
+        fileBuffer,
         s3Key,
         file.mimetype,
       );
+      // const s3Url = await this.s3Service.uploadFile(
+      //   file.buffer,
+      //   s3Key,
+      //   file.mimetype,
+      // );
 
       const newLocalContext = this.appointmentProtocolRepository.create({
         appointment_id: appointmentId,
@@ -245,6 +269,7 @@ export class CareProtocolsService {
         download_url: downloadUrl,
       });
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         `Failed to add patient context: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
